@@ -7,11 +7,11 @@ Download or clone the repository, open terminal in the root directory of the pro
 ```
 pip install -e .
 ```
-The installer should download and install or the required Python packages. However, please keep in mind that the required versions of the packages declared in the setup.py might be over-restrictive (you can try changing the versions and see whether the tool can still work).
+The installer should download and install or the required Python packages. However, please keep in mind that the required versions of the packages declared in the setup.py might be over-restrictive (you can try changing the versions and check whether the ACoRA tools execute properly).
 
 ## General usage scenario
 
-ACoRA consists of a set of tools supporting the code review process. They support data acquisition, models training, and classification. All of the scripts are located in the "scripts" folder. You can run each of them with the -h parameter to learn about the runtime parameter they accept. You can also check the "examples" folder to get examples of batch/bash runtime scripts.
+ACoRA consists of a set of tools helping to build an automated pipeline supporting the code review process. They support data acquisition, models training, and classification. All of the scripts are located in the "scripts" folder. You can run each of them with the -h parameter to learn about the runtime parameter they accept. You can also check the "examples" folder to get examples of batch/bash runtime scripts.
 
 The ACoRA process consists of the following activities:
 TBD
