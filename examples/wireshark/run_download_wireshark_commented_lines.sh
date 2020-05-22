@@ -8,7 +8,7 @@ python ../../scripts/download_commented_lines_from_gerrit.py "https://code.wires
      --max_queries 5000 \
      --max_fails 100 \
      --sep "$" \
-     --from_date "2015-02-23" \
-     --to_date "2020-05-18"
+     --from_date "2020-01-01" \
+     --to_date "2020-05-30"
 
 sleep 10
