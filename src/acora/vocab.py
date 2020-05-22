@@ -1,5 +1,3 @@
-
-
 class BERTVocab(object):
     """Vocabulary containing pairs of words and their ids. 
        To be used with BERT, it should contain special tokens [CLS], [SEP], and [UNK]."""
