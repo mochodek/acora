@@ -33,3 +33,7 @@ ACoRA provides the following scripts supporting this process:
 
 * scripts/classify_comments.py - this script allows classifying new instances of comments using a previously trained review-comments classification model and stores the results to an xlsx or csv file.
 
+## Pre-Train BERT for code
+
+The following scripts allow training a BERT model for code:
+* scripts/extract_code_lines_git.py - this scripts allow extracting lines of code from a Git repository and stores them in a json file (a list of of lists storing lines for each of the files separately). You can control from which commit the lines should be extracted and provide file extensions to be included in the processing.
