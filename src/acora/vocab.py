@@ -1,3 +1,7 @@
+import re
+
+default_code_stop_delim = r"([\s\t\(\)\[\]{}!@#$%^&*\/\+\-=;:\\\\|`'\"~,.<>/?\n'])"
+
 class BERTVocab(object):
     """Vocabulary containing pairs of words and their ids. 
        To be used with BERT, it should contain special tokens [CLS], [SEP], and [UNK]."""
@@ -25,3 +29,34 @@ class BERTVocab(object):
     @property
     def token_dict(self):
         return self._token_dict
+
+
+def camel_case_split(identifier):
+    """Split an identifier to substrings according to a camel case notation."""
+
+    matches = re.finditer('.+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)', identifier)
+    return [m.group(0) for m in matches]
+
+def code_vocab_tokenize(text, code_stop_delim=default_code_stop_delim):
+    """Uses a BERT approach to tokenize lines of code (the so-called word-piece tokenization)."""
+
+    split_loc = re.split(code_stop_delim, text)
+    split_loc = list(filter(lambda a: a != '', split_loc))
+    tokens = []
+    for token in split_loc:
+        split_under = re.split("([_])", token)
+        camel_case = camel_case_split(token)
+        if len(split_under) > 1:  
+            tokens.append(split_under[0])
+            tokens.extend([f'##{str(x)}' for x in split_under[1:]])
+        elif len(camel_case) > 1:
+            tokens.append(camel_case[0])
+            tokens.extend([f'##{str(x)}' for x in camel_case[1:]])
+        elif token.isdigit():
+            digits = list(str(token))
+            tokens.append(digits[0])
+            tokens.extend([f'##{str(x)}' for x in digits[1:]])
+        else:
+            tokens.append(token)
+            
+    return tokens
