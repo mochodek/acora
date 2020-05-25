@@ -44,11 +44,7 @@ ch.setLevel(logging.DEBUG)
 logger.addHandler(ch)
 
 
-
-
-
 if __name__ == '__main__':
-
 
     logger.info(f"\n#### Running script: {__file__}")
 
@@ -116,8 +112,6 @@ if __name__ == '__main__':
     not_use_gpu = args['not_use_gpu']
     random_seed = args['random_seed']
     preserve_all_columns = args['preserve_all_columns']
-    
-    preserve_all_columns
     
     ######
 
