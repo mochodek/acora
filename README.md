@@ -39,3 +39,5 @@ The following scripts allow training a BERT model for code:
 * scripts/extract_code_lines_git.py - this script allows extracting lines of code from a Git repository and stores them in a json file (a list of of lists storing lines for each of the files separately). You can control from which commit the lines should be extracted and provide file extensions to be included in the processing.
 
 * scripts/extract_vocab_from_code.py - this script extract BERT-like vocabulary from lines of code. It takes a path to a .json file containing lines of code (see extract_code_lines_git.py for more information) and saves the vocabulary to a .txt file.
+
+* scripts/generate_code_line_pairs.py - this script generates files consisting of consecutive pairs of lines of code that are used to pre-train a BERT model for code (it requires a .json file with lines of code per each of the files - see extract_vocab_from_code.py for more information).  

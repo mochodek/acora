@@ -1,6 +1,6 @@
 import re
 
-default_code_stop_delim = r"([\s\t\(\)\[\]{}!@#$%^&*\/\+\-=;:\\\\|`'\"~,.<>/?\n'])"
+from acora.code import default_code_stop_delim
 
 class BERTVocab(object):
     """Vocabulary containing pairs of words and their ids. 
@@ -15,9 +15,9 @@ class BERTVocab(object):
         token_dict = {}
         with open(vocab_path, 'r', encoding='utf8', errors="ignore") as reader:
             for i, line in enumerate(reader):
-                if limit and i == limit:
+                if limit is not None and i == limit:
                     break
-                token = line.strip()
+                token = line.replace("\n", "").replace("\r", "")
                 token_dict[token] = len(token_dict)
 
         return cls(token_dict)
