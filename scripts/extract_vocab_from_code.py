@@ -33,7 +33,7 @@ if __name__ == '__main__':
 
     parser.add_argument("--vocab_path",
                         help="a path to the output vocabulary txt file.", 
-                        type=str, required="./vocab.txt")
+                        type=str, default="./vocab.txt")
 
 
     args = vars(parser.parse_args())
