@@ -213,6 +213,9 @@ if __name__ == '__main__':
     logger.info("Transforming data for the subject output variables...")
     subject_transformer = CommentSubjectTransformer(reviews_all_df, subject_columns)
     y_all_subject = subject_transformer.encode_one_hot_all_subjects()
+
+    np.random.seed(random_seed)
+    set_random_seed(random_seed)
   
     logger.info("Loading the pre-trained BERT model...")
     layer_num = bert_config['num_hidden_layers']
@@ -251,9 +254,6 @@ if __name__ == '__main__':
         loss_weights=loss_weights,
         metrics=['accuracy'],
     )
-
-    np.random.seed(random_seed)
-    set_random_seed(random_seed)
 
     y_all = {"purpose_output": y_all_purpose}
     for i, subject_class in enumerate(subject_columns):
