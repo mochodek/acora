@@ -30,6 +30,10 @@ class BERTVocab(object):
     def token_dict(self):
         return self._token_dict
 
+    @property
+    def token_list(self):
+        return list(self._token_dict.keys())
+
 
 def camel_case_split(identifier):
     """Split an identifier to substrings according to a camel case notation."""
