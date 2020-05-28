@@ -1,5 +1,5 @@
 python ../../scripts/download_commented_lines_from_gerrit.py "https://code.wireshark.org/review/" \
-     "data\wireshark_commented_lines_merged_1.csv" \
+     "data\wireshark_commented_lines_merged.csv" \
      "/changes/?q=status:merged&o=ALL_FILES&o=ALL_REVISIONS&o=DETAILED_LABELS" \
      --sleep_between_pages 1 \
      --n 500 \
