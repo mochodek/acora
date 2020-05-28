@@ -8,6 +8,12 @@ import logging
 from acora.gerrit import GerritReviewDataDownloader
 
 
+logger_gerrit = logging.getLogger('acora.data.gerrit.GerritReviewDataDownloader')
+logger_gerrit.setLevel(logging.DEBUG)
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+logger_gerrit.addHandler(ch)
+
 logger = logging.getLogger(f'acora.{__file__}')
 logger.setLevel(logging.DEBUG)
 ch = logging.StreamHandler()
