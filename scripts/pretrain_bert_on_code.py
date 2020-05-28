@@ -94,7 +94,7 @@ if __name__ == '__main__':
                         type=int, default=20)
 
     parser.add_argument("--model_save_path", help="a path to serialize the trained BERT model.",
-                        type=str, default="./bert_on_code.h5")
+                        type=str, default="./bert_pretrained_on_code.h5")
 
 
     args = vars(parser.parse_args())
