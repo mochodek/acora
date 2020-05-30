@@ -200,7 +200,7 @@ class GerritReviewDataDownloader(object):
                 except:
                     fails += 1
                     self.logger.error(traceback.format_exc())
-                    time_sleep = self.sleep_between_pages + self.sleep_between_pages * fails
+                    time_sleep = self.sleep_between_pages
                     self.logger.info(f'Waiting for {time_sleep} seconds because of HTTP error...')
                     time.sleep(time_sleep)
 
@@ -327,7 +327,7 @@ class GerritReviewDataDownloader(object):
                 except:
                     fails += 1
                     self.logger.error(traceback.format_exc())
-                    time_sleep = self.sleep_between_pages + self.sleep_between_pages * fails
+                    time_sleep = self.sleep_between_pages
                     self.logger.info(f'Waiting for {time_sleep} seconds because of HTTP error...')
                     time.sleep(time_sleep)
 
