@@ -74,6 +74,6 @@ if __name__ == '__main__':
     downloader = GerritReviewDataDownloader(base_url=base_url,sleep_between_pages=sleep_between_pages)
     downloader.download_lines_to_csv(filename, base_query, n=n, 
                 max_queries=max_queries, max_fails=max_fails,
-                from_date=from_date, to_date=to_date)
+                from_date=from_date, to_date=to_date, sep=sep)
 
 
