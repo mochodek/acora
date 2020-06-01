@@ -32,7 +32,11 @@ with warnings.catch_warnings():
         from tensorflow import ConfigProto, Session, set_random_seed
     else:
         from tensorflow.compat.v1 import ConfigProto, Session, set_random_seed
+<<<<<<< HEAD
     
+=======
+         
+>>>>>>> 462351b5db2782de34120624dc93491b705f3a84
     from tensorflow.python.client import device_lib
 
 
@@ -129,8 +133,11 @@ if __name__ == '__main__':
     if not not_use_gpu and len(gpus) == 0:
         logger.error("You don't have a GPU available on your system, it can affect the performance...")
 
+<<<<<<< HEAD
     import tensorflow as tf
     
+=======
+>>>>>>> 462351b5db2782de34120624dc93491b705f3a84
     config = ConfigProto( device_count = {'GPU': 0 if not_use_gpu else len(gpus)}, allow_soft_placement = True )
     sess = Session(config=config) 
     keras.backend.set_session(sess)

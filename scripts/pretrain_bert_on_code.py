@@ -226,6 +226,10 @@ if __name__ == '__main__':
         steps_per_epoch=steps_per_epoch, 
         epochs=epochs, 
         verbose=1,
+        callbacks=[
+            keras.callbacks.EarlyStopping(monitor='loss', patience=5),
+            keras.callbacks.ModelCheckpoint(model_save_path, monitor='loss', save_best_only=True)
+        ],
     )
 
     logger.info(f"Saving model to {model_save_path}")
