@@ -127,3 +127,16 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+examples/uncased_L-8_H-512_A-8/bert_config.json
+examples/uncased_L-8_H-512_A-8/bert_model.ckpt.data-00000-of-00001
+examples/uncased_L-8_H-512_A-8/bert_model.ckpt.index
+examples/uncased_L-8_H-512_A-8/vocab.txt
+examples/wireshark/bert_on_train_comments.h5
+examples/wireshark/bert_pretrained_on_code.h5
+examples/wireshark/comment_purpose_test.pdf
+examples/wireshark/comment_purpose_train.pdf
+examples/wireshark/comment_subject_test.pdf
+examples/wireshark/comment_subject_train.pdf
+examples/wireshark/data/classify_comments_results.xlsx
+examples/wireshark/data/lines.json
+examples/wireshark/data/vocab.txt
