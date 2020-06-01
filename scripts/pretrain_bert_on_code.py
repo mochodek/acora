@@ -129,8 +129,8 @@ if __name__ == '__main__':
     if not not_use_gpu and len(gpus) == 0:
         logger.error("You don't have a GPU available on your system, it can affect the performance...")
      
-    config = tf.ConfigProto( device_count = {'GPU': 0 if not_use_gpu else len(gpus)}, allow_soft_placement = True )
-    sess = tf.Session(config=config) 
+    config = ConfigProto( device_count = {'GPU': 0 if not_use_gpu else len(gpus)}, allow_soft_placement = True )
+    sess = Session(config=config) 
     keras.backend.set_session(sess)
     
 
@@ -164,7 +164,6 @@ if __name__ == '__main__':
 
     # set adapter non-trainable:
     if use_adapter:
-        sess = tf.compat.v1.keras.backend.get_session()
         for layer in model.layers:
             if "Adapter" in layer.name:
                 new_weights = []
