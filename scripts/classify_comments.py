@@ -28,11 +28,11 @@ with warnings.catch_warnings():
 
     import tensorflow as tf
 
-    if tf.__version__.startswith("2."):
-        from tensorflow.compat.v1 import ConfigProto, Session, set_random_seed
-    else:
+    if tf.__version__.startswith("1."):
         from tensorflow import ConfigProto, Session, set_random_seed
-    
+    else:
+        from tensorflow.compat.v1 import ConfigProto, Session, set_random_seed
+         
     from tensorflow.python.client import device_lib
 
 
