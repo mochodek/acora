@@ -27,7 +27,12 @@ with warnings.catch_warnings():
     from keras_radam import RAdam
 
     import tensorflow as tf
-    from tensorflow import set_random_seed
+
+    if tf.__version__.startswith("1."):
+        from tensorflow import ConfigProto, Session, set_random_seed
+    else:
+        from tensorflow.compat.v1 import ConfigProto, Session, set_random_seed
+    
     from tensorflow.python.client import device_lib
 
 
@@ -124,8 +129,10 @@ if __name__ == '__main__':
     if not not_use_gpu and len(gpus) == 0:
         logger.error("You don't have a GPU available on your system, it can affect the performance...")
 
-    config = tf.ConfigProto( device_count = {'GPU': 0 if not_use_gpu else len(gpus)}, allow_soft_placement = True )
-    sess = tf.Session(config=config) 
+    import tensorflow as tf
+    
+    config = ConfigProto( device_count = {'GPU': 0 if not_use_gpu else len(gpus)}, allow_soft_placement = True )
+    sess = Session(config=config) 
     keras.backend.set_session(sess)
 
     logger.info(f"Loading vocabulary from {vocab_path}")

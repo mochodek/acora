@@ -31,7 +31,12 @@ with warnings.catch_warnings():
     from keras_radam import RAdam
 
     import tensorflow as tf
-    from tensorflow import set_random_seed
+
+    if tf.__version__.startswith("1."):
+        from tensorflow import ConfigProto, Session, set_random_seed
+    else:
+        from tensorflow.compat.v1 import ConfigProto, Session, set_random_seed
+
     from tensorflow.python.client import device_lib
 
 
@@ -123,10 +128,11 @@ if __name__ == '__main__':
     gpus = [x.name for x in device_lib.list_local_devices() if x.device_type == 'GPU']
     if not not_use_gpu and len(gpus) == 0:
         logger.error("You don't have a GPU available on your system, it can affect the performance...")
-
+     
     config = tf.ConfigProto( device_count = {'GPU': 0 if not_use_gpu else len(gpus)}, allow_soft_placement = True )
     sess = tf.Session(config=config) 
     keras.backend.set_session(sess)
+    
 
     logger.info(f"Loading vocabulary from {vocab_path}")
     vocab = BERTVocab.load_from_file(vocab_path, limit=vocab_size)
@@ -158,7 +164,7 @@ if __name__ == '__main__':
 
     # set adapter non-trainable:
     if use_adapter:
-        session = K.get_session()
+        sess = tf.compat.v1.keras.backend.get_session()
         for layer in model.layers:
             if "Adapter" in layer.name:
                 new_weights = []
