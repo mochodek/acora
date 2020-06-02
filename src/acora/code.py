@@ -1,9 +1,26 @@
 import re
+import logging
+
+import pandas as pd
+import numpy as np
+
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
+from sklearn.metrics import matthews_corrcoef as mcc_score
 
 import unicodedata
 from keras_bert import Tokenizer
 from keras_bert.bert import TOKEN_CLS, TOKEN_SEP, TOKEN_UNK
 
+import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
+import seaborn as sns
+
+logger = logging.getLogger('acora.code')
+logger.setLevel(logging.DEBUG)
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+logger.addHandler(ch)
 
 default_code_stop_delim = r"([\s\t\(\)\[\]{}!@#$%^&*\/\+\-=;:\\\\|`'\"~,.<>/?\n'])"
 
@@ -96,3 +113,85 @@ def generate_code_pairs(file_lines, tokenizer, line_repeat_period=64, logger = N
     
     return code_line_pairs
 
+def load_code_files(data_paths, cols=None, sep=";"):
+    """Loads code lines files(either in csv or xlsx format).
+
+    Parameters
+        ----------
+        training_data_paths : list of str 
+            A list of paths to files with the lines data (either csv or xlsx).
+        cols : list of str
+            list of columns to load from the files.
+        sep : str, optional
+            A separator used to separate columns in a csv file.
+    
+    """
+    combined_files = []
+    for data_path in data_paths:
+        logger.info(f"Loading training data from {data_path}")
+        if data_path.endswith(".xlsx"):
+            code_lines_df = pd.read_excel(data_path)
+        elif  data_path.endswith(".csv"):
+            code_lines_df = pd.read_csv(data_path, sep=sep)
+        else:
+            logger.error(f"Unrecognized file format of {data_path}.")
+            exit(1)
+
+        if cols is None:
+            cols = code_lines_df.columns.tolist()
+        
+        code_lines_df = code_lines_df[cols]
+        combined_files.append(code_lines_df)
+
+    code_lines_all_df = pd.concat(combined_files, axis=0, ignore_index=True, sort=False)
+    logger.info(f"Loaded {code_lines_all_df.shape[0]:,} rows and {code_lines_all_df.shape[1]:,} cols...")
+
+    return code_lines_all_df
+
+
+def plot_commented_lines_confusion_matrix(y_pred, y, cm_path,
+    figsize=(6,6), cmap="Blues"):
+    """Generates and saves a confusion matrix plot to a file.""" 
+
+    cf_matrix = confusion_matrix(y, y_pred)
+
+    cmn = cf_matrix.astype('float') / cf_matrix.sum(axis=1)[:, np.newaxis]
+    perc_labs = ["{0:.1%}".format(value) for value in cmn.flatten()]
+
+    group_counts = ["{0:0.0f}\n".format(value) for value in cf_matrix.flatten()]
+        
+    box_labels = [f"{v1}{v2}".strip() for v1, v2 in zip(group_counts,perc_labs)]
+    box_labels = np.asarray(box_labels).reshape(cmn.shape[0],cmn.shape[1])
+
+    fig, ax = plt.subplots(figsize=figsize)
+    sns.heatmap(cmn, annot=box_labels, fmt='', 
+                annot_kws={"fontsize":12},
+                xticklabels=["Not commented", "Commented"], 
+                yticklabels=["Not commented", "Commented"],
+            cmap=cmap,
+            linecolor='lightgray', linewidths=0.5,
+            square=True,
+            cbar=False,
+            vmin=0, vmax=1)
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+    plt.tight_layout()
+    plt.savefig(cm_path)
+    logger.info(f"Confusion matrix for the lines commented on saved to {cm_path}.")
+    plt.close()
+
+
+def report_commented_lines_predictions_accuracy(y_pred, y):
+    """ Calculates prediction quality metrics and prints them."""
+
+    commented_lines_acc = accuracy_score(y, y_pred)
+    commented_lines_f1 = f1_score(y, y_pred, average="macro")
+    commented_lines_precision = precision_score(y, y_pred, average="macro")
+    commented_lines_recall = precision_score(y, y_pred, average="macro")
+    commented_lines_mcc = mcc_score(y, y_pred)
+
+    logger.info(f"Accuracy = {commented_lines_acc:.2f}")
+    logger.info(f"Precision = {commented_lines_precision:.2}")
+    logger.info(f"Recall = {commented_lines_recall:.2}")
+    logger.info(f"F1-score = {commented_lines_f1:.2}")
+    logger.info(f"MCC = {commented_lines_mcc:.2}")

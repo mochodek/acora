@@ -93,14 +93,14 @@ if __name__ == '__main__':
         logger.error(f"Wrong file type of {output_dataset_path}. Only csv and xlsx files are supported.")
         exit(1)
 
-    if lines_with_comments_path_extension == 'xslx':
+    if lines_with_comments_path_extension == '.xslx':
         lines_with_comments_df = pd.read_excel(lines_with_comments_path)
     else:
         lines_with_comments_df = pd.read_csv(lines_with_comments_path, sep=sep)
     lines_with_comments_df[line_column] = lines_with_comments_df[line_column].fillna("")
     logger.info(f"Loaded {lines_with_comments_df.shape[0]:,} lines with comments from {lines_with_comments_path}")
 
-    if lines_path_extension == 'xslx':
+    if lines_path_extension == '.xlsx':
         lines_df = pd.read_excel(lines_path)
     else:
         lines_df = pd.read_csv(lines_path, sep=sep)
@@ -122,6 +122,8 @@ if __name__ == '__main__':
 
     logger.info("Preparing the dataset...")
     dataset = []
+    total_commented_added = 0
+    total_ok_added = 0
     for i, change_id in enumerate(commented_lines_change_ids): 
 
         if i % 100 == 0:
@@ -131,6 +133,11 @@ if __name__ == '__main__':
         lines_with_comments_for_change_df = lines_with_comments_df[lines_with_comments_df[review_change_column] == change_id]
         lines_for_change_df = lines_df[lines_df[review_change_column] == change_id]
         
+        # TODO: Consider limiting the number of commented lines from a review to up to the same number as non-commented lines.
+        #diff_lines = lines_with_comments_for_change_df.shape[0] - lines_for_change_df.shape[0]
+        #if diff_lines > 0:
+        #    lines_with_comments_for_change_df = lines_with_comments_for_change_df.head(lines_for_change_df.shape[0])
+
         added_commented_lines = set()
         for idx, commented_line in lines_with_comments_for_change_df.iterrows():
             if commented_line[line_column] not in added_commented_lines:
@@ -138,16 +145,18 @@ if __name__ == '__main__':
                 added_commented_lines.add(commented_line[line_column])
         
         no_commented_lines = len(added_commented_lines)
+        total_commented_added += no_commented_lines
         max_no_ok_lines = no_commented_lines * ok_to_commented_ratio
         
         ok_lines_added = 0
         for idx, ok_line in lines_for_change_df.iterrows():
-            if ok_lines_added >= max_no_ok_lines:
+            if ok_lines_added >= max_no_ok_lines and total_ok_added-total_commented_added >= 0:
                 break
                 
             if ok_line[line_column] not in lines_with_comments_for_change_df[line_column]:
                 dataset.append([ok_line[col] for col in columns_to_preserve] + [0,])
                 ok_lines_added += 1
+                total_ok_added += 1
 
     dataset_df = pd.DataFrame(dataset, columns=columns_to_preserve + ['commented'])    
 
@@ -166,7 +175,7 @@ if __name__ == '__main__':
     logger.info(f"Ratio of lines both commented and non-commented to all lines: {ratio_of_lines_with_instances_in_multiple_clases}")
 
     logger.info(f"Saving the dataset to {output_dataset_path}")
-    if output_dataset_path_extension == 'xslx':
+    if output_dataset_path_extension == '.xlsx':
         dataset_df.to_excel(output_dataset_path, index=False)
     else:
         dataset_df.to_csv(output_dataset_path, sep=sep, index=False)
