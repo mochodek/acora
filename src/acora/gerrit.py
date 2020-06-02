@@ -278,49 +278,55 @@ class GerritReviewDataDownloader(object):
                         for rev_id in list(revisions.keys()):
                             # first we get all the files from the revision
                             files_query = f'/changes/{change_id}/revisions/{rev_id}/files/'
-                            files = self.client.get(files_query, headers={'Content-Type': 'application/json'})
+                            try:
+                                files = self.client.get(files_query, headers={'Content-Type': 'application/json'})
 
-                            # then we go through all of these files
-                            for file_id in list(files.keys()):
-                                # for now, we only filter out the commit message as we do not really need it
-                                # but we can also filter out other types of files
-                                # fileID is the name of the file, so we can use that to filter 
-                                if 'COMMIT' not in file_id:
-                                    # first we extract the diff structure for the file in this revisio
-                                    url_file_id = urllib.parse.quote_plus(file_id)
-                                    diff_query = f'/changes/{change_id}/revisions/{rev_id}/files/{url_file_id}/diff'
-                                    diff = self.client.get(diff_query, headers={'Content-Type': 'application/json'})
+                                # then we go through all of these files
+                                for file_id in list(files.keys()):
+                                    # for now, we only filter out the commit message as we do not really need it
+                                    # but we can also filter out other types of files
+                                    # fileID is the name of the file, so we can use that to filter 
+                                    if 'COMMIT' not in file_id:
+                                        # first we extract the diff structure for the file in this revisio
+                                        url_file_id = urllib.parse.quote_plus(file_id)
+                                        diff_query = f'/changes/{change_id}/revisions/{rev_id}/files/{url_file_id}/diff'
+                                        try:
+                                            diff = self.client.get(diff_query, headers={'Content-Type': 'application/json'})
 
-                                    # here we extract the content of the diff, 
-                                    # which is the lines and commit messages
-                                    content = diff['content']
+                                            # here we extract the content of the diff, 
+                                            # which is the lines and commit messages
+                                            content = diff['content']
 
 
-                                    # here we go through all churns of the change
-                                    # and based on the type we either include or exclude them
-                                    # in the resulting file
-                                    # the content has many churns, so we need to extract them and process one-by-one
-                                    for churn in content:
-                                        # the first element of the keys is the type - a, b, or ab
-                                        # a - lines removed
-                                        # b - lines added
-                                        # ab - lines that are the same in both revisions
-                                        churn_type = list(churn.keys())[0]
+                                            # here we go through all churns of the change
+                                            # and based on the type we either include or exclude them
+                                            # in the resulting file
+                                            # the content has many churns, so we need to extract them and process one-by-one
+                                            for churn in content:
+                                                # the first element of the keys is the type - a, b, or ab
+                                                # a - lines removed
+                                                # b - lines added
+                                                # ab - lines that are the same in both revisions
+                                                churn_type = list(churn.keys())[0]
 
-                                        # here, we check if the type is b, which means lines added
-                                        # b denotes that the lines are in revision b, but not in revision a
-                                        # so, this means that these lines are added
-                                        if churn_type == 'b':
-                                            for lines in list(churn.values()):
-                                                # in this loop we take all the lines, 
-                                                # but in principle we can filter some lines here
-                                                # then we need to add an if inside this loop
-                                                for line in lines:
-                                                    try:
-                                                        line_contents = line.replace("\n", " _ ").replace('\r', '_').replace(sep, '_')
-                                                        out.write(f'{change_id}{sep}{date_created_str}{sep}{rev_id}{sep}{file_id}{sep}{line_contents}\n')
-                                                    except UnicodeEncodeError:
-                                                        self.logger.info("Encoding problem, skipping one line")                                
+                                                # here, we check if the type is b, which means lines added
+                                                # b denotes that the lines are in revision b, but not in revision a
+                                                # so, this means that these lines are added
+                                                if churn_type == 'b':
+                                                    for lines in list(churn.values()):
+                                                        # in this loop we take all the lines, 
+                                                        # but in principle we can filter some lines here
+                                                        # then we need to add an if inside this loop
+                                                        for line in lines:
+                                                            try:
+                                                                line_contents = line.replace("\n", " _ ").replace('\r', '_').replace(sep, '_')
+                                                                out.write(f'{change_id}{sep}{date_created_str}{sep}{rev_id}{sep}{file_id}{sep}{line_contents}\n')
+                                                            except UnicodeEncodeError:
+                                                                self.logger.info("Encoding problem, skipping one line")  
+                                        except:
+                                            self.logger.debug(f"Failed to query: {diff_query}")  
+                            except:
+                                self.logger.debug(f"Failed to query: {files_query}")                            
             
                     if has_more:
                         start += n
