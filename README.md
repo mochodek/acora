@@ -58,3 +58,5 @@ The following scripts allow to train a model for detecting lines that will be co
 * scripts/prepare_train_dataset_commented_lines.py - this script takes two files as an input: a file with entries about commented lines and a file with all lines. It goes through the commented lines and picks some non-commented lines from the same reviews (assuming that they are OK). You can control the ratio between the commented lines and non-commented lines in the dataset. The resulted dataset can be used to train and validate a BERT classification model.
 
 * scripts/train_bert_commented_lines.py - this script takes the dataset prepared by the prepare_train_dataset_commented_lines.py script and a pretrained BERT on code model to fine tune it to be able to detect lines that will be commented on.
+
+* scripts/classify_lines.py - this script allows to use a trained BERT model to detect lines that will be commented on.
