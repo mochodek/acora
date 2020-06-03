@@ -178,6 +178,7 @@ if __name__ == '__main__':
 
     logger.info("Loading training data...")
     code_lines_all_df = load_code_files(training_data_paths, cols=None, sep=sep)
+    code_lines_all_df[line_column] = code_lines_all_df[line_column].fillna("")
 
     if train_size < 1.0:
         ids_train, ids_val, _, _ = train_test_split(code_lines_all_df.index.tolist(), 
@@ -226,7 +227,7 @@ if __name__ == '__main__':
     outputs = [keras.layers.Dense(units=1, activation='sigmoid', name="Output-Commented")(dense)]
 
     model = keras.models.Model(inputs, outputs)
-
+    model.name="BERT4CodeComments"
 
     model.compile(
         RAdam(learning_rate =lr),
