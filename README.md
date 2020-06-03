@@ -51,7 +51,7 @@ The following scripts allow training a BERT model for code:
 
 * scripts/pretrain_bert_on_code.py - this is the final script to be used to pre-train a BERT model on code. It uses the vocabulary and a dataset of line-of-code pairs and outputs a trained model. Such a model can be used to extract line embeddings or can be used further as a basis for training specialized models.
 
-## Train BERT for detecting lines that will likely by commented on
+## Train BERT for detecting lines that will likely be commented on
 
 The following scripts allow to train a model for detecting lines that will be commented on:
 
