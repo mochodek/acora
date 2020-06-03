@@ -59,4 +59,6 @@ The following scripts allow to train a model for detecting lines that will be co
 
 * scripts/train_bert_commented_lines.py - this script takes the dataset prepared by the prepare_train_dataset_commented_lines.py script and a pretrained BERT on code model to fine tune it to be able to detect lines that will be commented on.
 
+* scripts/test_bert_commented_lines.py - this script allows testing a trained BERT model on external datasets.
+
 * scripts/classify_lines.py - this script allows to use a trained BERT model to detect lines that will be commented on.
