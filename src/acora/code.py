@@ -61,7 +61,7 @@ class CodeTokenizer(Tokenizer):
         first_tokens = self._tokenize(first)
         second_tokens = self._tokenize(second) if second is not None else None
         return first_tokens, second_tokens
-    
+
     def _tokenize(self, text):
         """Split text to tokens.
         :param first: First text.
@@ -117,13 +117,13 @@ def load_code_files(data_paths, cols=None, sep=";"):
     """Loads code lines files(either in csv or xlsx format).
 
     Parameters
-        ----------
-        training_data_paths : list of str 
-            A list of paths to files with the lines data (either csv or xlsx).
-        cols : list of str
-            list of columns to load from the files.
-        sep : str, optional
-            A separator used to separate columns in a csv file.
+    ----------
+    training_data_paths : list of str 
+        A list of paths to files with the lines data (either csv or xlsx).
+    cols : list of str
+        list of columns to load from the files.
+    sep : str, optional
+        A separator used to separate columns in a csv file.
     
     """
     combined_files = []
@@ -145,7 +145,7 @@ def load_code_files(data_paths, cols=None, sep=";"):
 
     code_lines_all_df = pd.concat(combined_files, axis=0, ignore_index=True, sort=False)
     logger.info(f"Loaded {code_lines_all_df.shape[0]:,} rows and {code_lines_all_df.shape[1]:,} cols...")
-
+    
     return code_lines_all_df
 
 
