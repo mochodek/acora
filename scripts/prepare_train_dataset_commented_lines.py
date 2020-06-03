@@ -24,6 +24,88 @@ logger.addHandler(ch)
 
 default_columns_to_preserve = ['change_id', 'revision_id', 'filename', 'line_contents']
 
+
+def combine_dataset(lines_with_comments_df, lines_df, columns_to_preserve,
+                    ok_to_commented_ratio = 1.0, 
+                    balance_commented_lines_for_change=True,
+                    allow_taking_more_non_commented_lines_from_change=True,
+                    force_uniqueness_for_class=None):
+    """Mixes commented and non-commented lines from the reviewed changes to prepare a dataset.
+    Parameters:
+    -----------
+    lines_with_comments_df : DataFrame, lines that were commented on
+    lines_df : DataFrame, lines from the reviewed changes
+    columns_to_preserve : list, a list of columns to preserve in the output dataset.
+    ok_to_commented_ratio : float, a ratio between non and commented lines to preserve.
+    balance_commented_lines_for_change : boolean, if True the number of commented lines for a chanage
+                                        will be at max. the same as non-commented. 
+    allow_taking_more_non_commented_lines_from_change : boolean, if True, more non-commented lines can 
+                                        be taken from a change so globally the ok_to_commented_ratio is 
+                                        obtained.
+    force_uniqueness_for_class : int or None, if int is given it has to be either 0 - all the
+                                        lines which instances where both commented and not commented
+                                        will be treated as non-commented and 1 - will be treatd as 
+                                        commented on.
+
+    Returns the dataset as a DataFrame.
+    """
+    dataset = []
+    total_commented_added = 0
+    total_ok_added = 0
+    all_commmented_lines_added = set()
+    all_ok_lines_added = set()
+    for i, change_id in enumerate(commented_lines_change_ids): 
+
+        if i % 100 == 0:
+            logger.info(f'Processing {i+1} / {len(commented_lines_change_ids)}: {change_id}')
+            
+        lines_with_comments_for_change_df = lines_with_comments_df[lines_with_comments_df[review_change_column] == change_id]
+        lines_for_change_df = lines_df[lines_df[review_change_column] == change_id]
+        
+        if balance_commented_lines_for_change:
+            diff_lines = lines_with_comments_for_change_df.shape[0] - lines_for_change_df.shape[0]
+            if diff_lines > 0:
+                lines_with_comments_for_change_df = lines_with_comments_for_change_df.head(lines_for_change_df.shape[0])
+
+        added_commented_lines = set()
+        for idx, commented_line in lines_with_comments_for_change_df.iterrows():
+            if commented_line[line_column] not in added_commented_lines:
+                if force_uniqueness_for_class is None or force_uniqueness_for_class == 1 or \
+                        (force_uniqueness_for_class == 0 and commented_line[line_column] not in all_ok_lines_added):
+                    if force_uniqueness_for_class is None or \
+                            (force_uniqueness_for_class is not None and commented_line[line_column] not in all_commmented_lines_added and \
+                                commented_line[line_column] not in all_ok_lines_added):
+                        dataset.append([commented_line[col] for col in columns_to_preserve] + [1,])
+                        added_commented_lines.add(commented_line[line_column])
+                        all_commmented_lines_added.add(commented_line[line_column])
+        
+        no_commented_lines = len(added_commented_lines)
+        total_commented_added += no_commented_lines
+        max_no_ok_lines = no_commented_lines * ok_to_commented_ratio
+        
+        ok_lines_added = 0
+        for idx, ok_line in lines_for_change_df.iterrows():
+            if allow_taking_more_non_commented_lines_from_change:
+                if ok_lines_added >= max_no_ok_lines and total_ok_added-total_commented_added >= 0:
+                    break
+            else:
+                if ok_lines_added >= max_no_ok_lines:
+                    break
+                
+            if ok_line[line_column] not in lines_with_comments_for_change_df[line_column]:
+                if force_uniqueness_for_class is None or force_uniqueness_for_class == 0 or \
+                        (force_uniqueness_for_class == 1 and ok_line[line_column] not in all_commmented_lines_added):
+                        if force_uniqueness_for_class is None or \
+                                (force_uniqueness_for_class is not None and ok_line[line_column] not in all_ok_lines_added and \
+                                    ok_line[line_column] not in all_commmented_lines_added):
+                            dataset.append([ok_line[col] for col in columns_to_preserve] + [0,])
+                            all_ok_lines_added.add(ok_line[line_column])
+                            ok_lines_added += 1
+                            total_ok_added += 1
+
+    dataset_df = pd.DataFrame(dataset, columns=columns_to_preserve + ['commented'])    
+    return dataset_df
+
 if __name__ == '__main__':
 
 
@@ -60,6 +142,25 @@ if __name__ == '__main__':
                         "(should include line and review_change columns).",
                         default=default_columns_to_preserve, type=str, nargs="+")
 
+    parser.add_argument("--balance_commented_lines_for_change", 
+                        help="if True the number of commented lines for a chanage "
+                             "will be at max. the same as non-commented.",
+                        action='store_true')
+
+    parser.add_argument("--allow_taking_more_non_commented_lines_from_change", 
+                        help="if True, more non-commented lines can "
+                        "be taken from a change so globally the ok_to_commented_ratio is "
+                        "obtained.",
+                        action='store_true')
+    
+    parser.add_argument("--force_uniqueness_for_class",
+                        help="if int is given it has to be either 0 - all the "
+                            "lines which instances where both commented and not commented "
+                            "will be treated as non-commented and 1 - will be treatd as "
+                            "commented on",
+                        default=None, type=int)
+
+    
     
     args = vars(parser.parse_args())
     logger.info(f"Run parameters: {str(args)}")
@@ -74,6 +175,9 @@ if __name__ == '__main__':
     line_column = args['line_column']
     review_change_column = args['review_change_column']
     columns_to_preserve = args['columns_to_preserve']
+    balance_commented_lines_for_change = args['balance_commented_lines_for_change']
+    allow_taking_more_non_commented_lines_from_change = args['allow_taking_more_non_commented_lines_from_change']
+    force_uniqueness_for_class = args['force_uniqueness_for_class']
     
     ######
 
@@ -121,45 +225,12 @@ if __name__ == '__main__':
     logger.info(f"The remaining number of lines is {lines_df.shape[0]:,}")
 
     logger.info("Preparing the dataset...")
-    dataset = []
-    total_commented_added = 0
-    total_ok_added = 0
-    for i, change_id in enumerate(commented_lines_change_ids): 
-
-        if i % 100 == 0:
-            logger.info(f'Processing {i+1} / {len(commented_lines_change_ids)}: {change_id}')
-            
-        dataset_change = []
-        lines_with_comments_for_change_df = lines_with_comments_df[lines_with_comments_df[review_change_column] == change_id]
-        lines_for_change_df = lines_df[lines_df[review_change_column] == change_id]
-        
-        # TODO: Consider limiting the number of commented lines from a review to up to the same number as non-commented lines.
-        #diff_lines = lines_with_comments_for_change_df.shape[0] - lines_for_change_df.shape[0]
-        #if diff_lines > 0:
-        #    lines_with_comments_for_change_df = lines_with_comments_for_change_df.head(lines_for_change_df.shape[0])
-
-        added_commented_lines = set()
-        for idx, commented_line in lines_with_comments_for_change_df.iterrows():
-            if commented_line[line_column] not in added_commented_lines:
-                dataset.append([commented_line[col] for col in columns_to_preserve] + [1,])
-                added_commented_lines.add(commented_line[line_column])
-        
-        no_commented_lines = len(added_commented_lines)
-        total_commented_added += no_commented_lines
-        max_no_ok_lines = no_commented_lines * ok_to_commented_ratio
-        
-        ok_lines_added = 0
-        for idx, ok_line in lines_for_change_df.iterrows():
-            if ok_lines_added >= max_no_ok_lines and total_ok_added-total_commented_added >= 0:
-                break
-                
-            if ok_line[line_column] not in lines_with_comments_for_change_df[line_column]:
-                dataset.append([ok_line[col] for col in columns_to_preserve] + [0,])
-                ok_lines_added += 1
-                total_ok_added += 1
-
-    dataset_df = pd.DataFrame(dataset, columns=columns_to_preserve + ['commented'])    
-
+    dataset_df = combine_dataset(lines_with_comments_df, lines_df, columns_to_preserve,
+                    ok_to_commented_ratio = ok_to_commented_ratio, 
+                    balance_commented_lines_for_change=balance_commented_lines_for_change,
+                    allow_taking_more_non_commented_lines_from_change=allow_taking_more_non_commented_lines_from_change,
+                    force_uniqueness_for_class=force_uniqueness_for_class)
+    
     logger.info(f"Lines: {dataset_df.shape[0]:,}")
     logger.info(f"Unique line contents: {dataset_df[line_column].unique().shape[0]:,}")
     counts = dataset_df.groupby('commented').count()

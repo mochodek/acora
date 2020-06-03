@@ -5,4 +5,7 @@ python ../../scripts/prepare_train_dataset_commented_lines.py  ^
      --sep  "$" ^
      --ok_to_commented_ratio 1.0 ^
      --line_column "line_contents" ^
-     --review_change_column  "change_id"
+     --review_change_column  "change_id" ^
+      --allow_taking_more_non_commented_lines_from_change
+
+
