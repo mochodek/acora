@@ -63,7 +63,7 @@ The following scripts allow to train a model for detecting lines that will be co
 
 * scripts/classify_lines.py - this script allows to use a trained BERT model to detect lines that will be commented on.
 
-## Recommending on what the reviewer should focus on
+## Find similar lines
 
 The following scripts allow to provide recommendations for the reviewers on what they should focus on:
 
