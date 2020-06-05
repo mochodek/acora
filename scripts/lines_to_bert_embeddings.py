@@ -10,14 +10,6 @@ logging.getLogger("tensorflow").setLevel(logging.INFO)
 import json
 
 import pandas as pd
-import numpy as np
-
-from scipy import stats
-
-from sklearn.model_selection import train_test_split
-from sklearn.utils import class_weight
-
-from collections import Counter
 
 import warnings  
 with warnings.catch_warnings():  
@@ -27,7 +19,6 @@ with warnings.catch_warnings():
     from keras.models import load_model
 
     from keras_bert import get_custom_objects
-    from keras_bert.layers.extract import Extract
 
     from keras_radam import RAdam
 
