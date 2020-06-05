@@ -67,4 +67,6 @@ The following scripts allow to train a model for detecting lines that will be co
 
 The following scripts allow to provide recommendations for the reviewers on what they should focus on:
 
-* scripts/lines_to_bert_embeddings.py - this script uses a given BERT model to extract lines embeddings and save it to a file. 
+* scripts/lines_to_bert_embeddings.py - this script uses a given BERT model to extract lines embeddings and save it to a file.
+
+* scripts/find_similar_lines.py - this script finds similar lines in the "database" to the provided lines (it requires line embeddings for the lines, see lines_to_bert_embeddings.py).
