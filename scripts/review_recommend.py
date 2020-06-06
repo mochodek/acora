@@ -1,0 +1,258 @@
+#!/usr/bin/env python
+
+description="""Detects lines of code that needs reviewer focus."""
+
+import argparse
+import logging
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # or any {'0', '1', '2'}
+logging.getLogger("tensorflow").setLevel(logging.INFO)
+import json
+
+from math import nan
+
+import pandas as pd
+
+from pathlib import Path
+
+import warnings  
+with warnings.catch_warnings():  
+    warnings.filterwarnings("ignore",category=FutureWarning)
+
+    import keras
+    from keras.models import load_model
+
+    from keras_bert import get_custom_objects
+
+    from keras_radam import RAdam
+
+    import tensorflow as tf
+
+    if tf.__version__.startswith("1."):
+        from tensorflow import ConfigProto, Session, set_random_seed
+    else:
+        from tensorflow.compat.v1 import ConfigProto, Session, set_random_seed
+         
+    from tensorflow.python.client import device_lib
+
+from acora.vocab import BERTVocab
+from acora.comments import default_subject_columns, \
+    load_comments_files, default_purpose_labels
+from acora.vocab import BERTVocab
+from acora.code import CodeTokenizer, load_code_files
+from acora.lamb import Lamb
+from acora.code_similarities import SimilarLinesFinder
+from acora.recommend import CodeReviewFocusRecommender
+from acora.code_embeddings import CodeLinesBERTEmbeddingsExtractor
+
+logger = logging.getLogger(f'acora.{__file__}')
+logger.setLevel(logging.DEBUG)
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+logger.addHandler(ch)
+logger_similar = logging.getLogger('acora.code_similarities')
+logger_similar.setLevel(logging.DEBUG)
+logger_similar.addHandler(ch)
+logger_recommend = logging.getLogger('acora.recommend')
+logger_recommend.setLevel(logging.DEBUG)
+logger_recommend.addHandler(ch)
+
+
+if __name__ == '__main__':
+
+
+    logger.info(f"\n#### Running script: {__file__}")
+
+    parser = argparse.ArgumentParser(description=description)
+
+    parser.add_argument("--input_lines_paths",
+                        help="a list of paths to files with the lines to investigate (either .csv or .xlsx).", 
+                        type=str, nargs="+")
+
+    parser.add_argument("--commented_lines_paths",
+                        help="a list of paths to files with the commented lines (either .csv or .xlsx)."
+                            " The files need to contain line_contents, purpose of the comment and subjects of the comment."
+                            " They will be used as a basis for recommendations.", 
+                        type=str, nargs="+")
+
+    parser.add_argument("--commented_lines_embeddings_path",
+                        help="a path to the json file storing commented lines and their embeddings "
+                            "serving as the basis for recommendations (see lines_to_bert_embeddings.py).", 
+                        type=str, default="./lines_with_embeddings.json")
+
+    parser.add_argument("--bert_trained_path",
+                        help="a path to a BERT model trained to detect lines that will be commented on", 
+                        type=str, required=True)
+
+    parser.add_argument("--bert_pretrained_path",
+                        help="a path to a pretrained BERT model on code", 
+                        type=str, required=True)
+
+    parser.add_argument("--vocab_path",
+                        help="a path to the vocabulary txt file.", 
+                        type=str, default="./vocab.txt")
+
+    parser.add_argument("--vocab_size",
+                        help="a number of entries to use from the vocabulary. If not provided all the entries are included." 
+                             " The same vocab_size should be used here as it was used for training the BERT model.", 
+                        type=int, default=None)
+
+    parser.add_argument("--line_column", help="a name of the column that stores the lines.",
+                        default="line_contents", type=str)
+    
+    parser.add_argument("--message_column", help="a name of the column that stores the comment/message.",
+                        type=str, default="message")
+
+    parser.add_argument("--purpose_column", help="a name of the column that stores the decision class for the comment purpose.",
+                        type=str, default="purpose")
+
+    parser.add_argument("--purpose_labels", help="a list of purpose labels to include (categories).",
+                        type=str, nargs="+", default=default_purpose_labels)
+
+    parser.add_argument("--subject_columns", help="a list of column names that store the decision classes for the comment subjects.",
+                        type=str, nargs="+", default=default_subject_columns)
+
+    parser.add_argument("--seq_len", help="a maximum length of a line (in the number of tokens).",
+                        type=int, default=128)
+
+    parser.add_argument("--sep", help="a seprator used to separate columns in a csv file.",
+                        default=";", type=str)
+
+    parser.add_argument("--output_file_path", help="a path to an output file storing the recommendations (either csv or xlsx).",
+                        type=str, default="./similar_lines.xlsx")
+    
+    parser.add_argument("--cut_off_percentile", help="a cut_off point to decide whether lines are similar or not. "
+                                                "It is the percentile of similarities between the lines from the database " 
+                                                "to its most similar lines in the same database.",
+                        type=int, default=50)
+
+    parser.add_argument("--not_use_gpu", help="to forbid using a GPU if available.",
+                        action='store_true')
+
+    parser.add_argument("--no_layers", help="the number of layers to include while extracting embeddings.",
+                        default=4, type=int)
+    
+    args = vars(parser.parse_args())
+    logger.info(f"Run parameters: {str(args)}")
+
+    #### Reading run arguments
+
+    input_lines_paths = args['input_lines_paths']
+    commented_lines_paths = args['commented_lines_paths']
+    commented_lines_embeddings_path = args['commented_lines_embeddings_path']
+    bert_trained_path = args['bert_trained_path']
+    bert_pretrained_path = args['bert_pretrained_path']
+    sep = args['sep']
+    output_file_path = args['output_file_path']
+    cut_off_percentile = args['cut_off_percentile']
+    line_column = args['line_column']
+    message_column = args['message_column']
+    purpose_column = args['purpose_column']
+    purpose_labels = args['purpose_labels']
+    subject_columns = args['subject_columns']
+    seq_len = args['seq_len']
+    vocab_path = args['vocab_path']
+    vocab_size = args['vocab_size']
+    not_use_gpu = args['not_use_gpu']
+    no_layers = args['no_layers']
+    
+    ######
+
+    cols = [line_column, message_column, purpose_column] + subject_columns
+
+    output_file_path_extension = Path(output_file_path).suffix
+
+    if output_file_path_extension not in ['.xlsx', '.csv']:
+        logger.error(f"Wrong file type of {output_file_path}. Only csv and xlsx files are supported.")
+        exit(1)
+
+    gpus = [x.name for x in device_lib.list_local_devices() if x.device_type == 'GPU']
+    if not not_use_gpu and len(gpus) == 0:
+        logger.error("You don't have a GPU available on your system, it can affect the performance...")
+
+    logger.info("Loading lines to review...")
+    code_lines_all_df = load_code_files(input_lines_paths, cols=None, sep=sep)
+    code_lines_all_df[line_column] = code_lines_all_df[line_column].fillna("")
+    lines_to_review = code_lines_all_df[line_column].tolist()
+
+    logger.info("Loading comments data...")
+    reviews_all_df = load_comments_files(commented_lines_paths, cols, sep)
+    reviews_all_df[line_column] = reviews_all_df[line_column].fillna("")
+    logger.info(f"Preserving comments with the purpose: {', '.join(purpose_labels)}")
+    reviews_all_df = reviews_all_df[reviews_all_df[purpose_column].isin(purpose_labels)].reset_index(drop=True)
+    logger.info(f"The reference database contains {reviews_all_df.shape[0]} comments.")
+
+    logger.info(f"Loading commented lines and their embeddings from {commented_lines_embeddings_path}")
+    with open(commented_lines_embeddings_path, encoding="utf-8", errors="ignore") as f:
+        lines_database, embeddings_database = json.load(f)
+    logger.info(f"Loaded {len(lines_database)} reference lines.")
+    
+    logger.info(f"Fitting a similarity line finder...")
+    finder = SimilarLinesFinder(cut_off_percentile=cut_off_percentile, cut_off_sample=150, max_similar=None)
+    finder.fit(lines_database, embeddings_database)
+
+    logger.info(f"Loading vocabulary from {vocab_path}")
+    vocab = BERTVocab.load_from_file(vocab_path, limit=vocab_size)
+    logger.info(f"Loaded {vocab.size:,} vocab entries.")
+
+    logger.info("Initializing a BERT code tokenizer...")
+    tokenizer = CodeTokenizer(vocab.token_dict, cased=True)
+    logger.info(f"BERT code tokenizer ready, example: 'bool acoraIs_nice = True;' -> {str(tokenizer.tokenize('bool acoraIs_nice = True;'))}")
+
+    logger.info(f"Loading the trained BERT model from {bert_trained_path}...")
+    custom_objects = get_custom_objects()
+    custom_objects['RAdam'] = RAdam
+    custom_objects['Lamb'] = Lamb
+    model = keras.models.load_model(bert_trained_path, 
+                                    custom_objects=custom_objects)
+
+    logger.info(f"Loading a pre-trained BERT model from {bert_pretrained_path}...")
+    pre_model = keras.models.load_model(bert_pretrained_path, 
+                                    custom_objects=custom_objects)
+
+    logger.info("Extracting lines embeddings...")
+    embeddings_extractor = CodeLinesBERTEmbeddingsExtractor(base_model=pre_model, 
+                                                            no_layers=no_layers,
+                                                            token_dict=vocab.token_dict)
+
+    recommender = CodeReviewFocusRecommender(classifier=model, 
+                        code_tokenizer = tokenizer, 
+                        seq_len = seq_len, 
+                        embeddings_extractor = embeddings_extractor,
+                        similarity_finder = finder,
+                        review_comments_df = reviews_all_df,
+                        line_column = line_column,
+                        purpose_column = purpose_column,
+                        subject_columns = subject_columns,
+                        message_column = message_column,
+                        classify_threshold=0.5)
+    review_results = recommender.review(lines_to_review)
+
+    results = []
+    result_columns = ['line', 'decision'] + purpose_labels + subject_columns + ['messages', 'lines']
+    empty_filler = [nan] * len(purpose_labels) + [nan] * len(subject_columns) + ["", ""]
+    for review_result in review_results:
+        line, decision, recommendations = review_result
+        row = [line, decision]
+        if decision == 1:
+            row += [recommendations['purpose'].get(purpose, 0) for purpose in purpose_labels]
+            row += [recommendations['subject'].get(subject, 0) for subject in subject_columns]
+            row += [" ||| ".join(recommendations['comments_messages']), " ||| ".join(recommendations['comments_lines'])]
+        else:
+            row += empty_filler
+        results.append(row)
+
+
+    logger.info(f"Saving the output to {output_file_path}")
+    result_df = pd.DataFrame(results, columns=result_columns)
+
+    if output_file_path_extension == '.xlsx':
+        result_df.to_excel(output_file_path, index=False)
+    else:
+        result_df.to_csv(output_file_path, sep=sep, index=False)
+
+    logger.info("The process of generating recommendations for reviewers has been completed.")
+
+
+
+

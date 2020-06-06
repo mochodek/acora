@@ -1,12 +1,13 @@
 
 import logging
 import numpy as np
+import random
 from sklearn.neighbors import NearestNeighbors
 
 class SimilarLinesFinder():
     """Allows finding similar lines to the lines given as the reference database."""
 
-    def __init__(self, cut_off_percentile=None, max_similar=None):
+    def __init__(self, cut_off_percentile=None, max_similar=None, cut_off_sample=500):
         """
         Parameters:
         -----------
@@ -16,6 +17,7 @@ class SimilarLinesFinder():
                                     and their most similar lines in the reference dataset.
                                     If None is given, the cut off is ignored.
         max_similar : int or None, the maximum number of similar lines to be returned.
+        cut_off_sample : int, the number of lines to sample while calculating the cut off threshold.
         """
         self.cut_off_percentile = cut_off_percentile
         self.max_similar = max_similar
@@ -24,6 +26,7 @@ class SimilarLinesFinder():
         self.nbrs = None
         self.logger = logging.getLogger('acora.code_similarities')
         self.dist_cut_off = None
+        self.cut_off_sample = cut_off_sample
 
     def fit(self, reference_lines, reference_lines_embeddings):
         """Fits a simlarity finder model
@@ -45,7 +48,7 @@ class SimilarLinesFinder():
 
         if self.cut_off_percentile is not None:
             self.logger.debug(f"Calcuating the cut off point for similarity...")
-            dist_all, _ = self.nbrs.kneighbors(self.reference_lines_embeddings, 
+            dist_all, _ = self.nbrs.kneighbors(random.sample(self.reference_lines_embeddings, self.cut_off_sample), 
                               n_neighbors=2, 
                               return_distance=True)
             distances = [x[1] for x in dist_all]
@@ -82,6 +85,35 @@ class SimilarLinesFinder():
        
             for j, sim_id in enumerate(sim_ids):
                 result.append((lines[i], self.reference_lines[sim_id], dist[i][j]))
+        
+        return result
+    
+    def query_to_dict(self, lines, lines_embeddings):
+        """Query reference lines to find similar lines to the lines given as the parameter and returns 
+        a dictionary with lines as keys and list of similar lines as values..
+
+        Parameters:
+        -----------
+        lines : a list of str, a list of lines to query for.
+        lines_embeddings: a list of lists of floats, line embeddings that will be used to find similar lines
+                                among the reference lines.
+        return : a list of tuples, each tupple consists of a query line, a similar reference line, and the distance measure.
+        """
+        if self.dist_cut_off is not None:
+            dist, sims_ids = self.nbrs.radius_neighbors(lines_embeddings, 
+                                radius=self.dist_cut_off,
+                                sort_results=True,
+                                return_distance=True)
+        else:
+            dist, sims_ids = self.nbrs.kneighbors(lines_embeddings, 
+                                return_distance=True)
+        result = {}
+        for i, sim_ids in enumerate(sims_ids):
+            line = lines[i]
+            if line not in result:
+                if self.max_similar is not None:
+                    sim_ids = sim_ids[:self.max_similar]
+                result[line] = [self.reference_lines[sim_id] for sim_id in sim_ids]
         
         return result
 

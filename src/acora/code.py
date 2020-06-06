@@ -128,7 +128,7 @@ def load_code_files(data_paths, cols=None, sep=";"):
     """
     combined_files = []
     for data_path in data_paths:
-        logger.info(f"Loading training data from {data_path}")
+        logger.info(f"Loading data from {data_path}")
         if data_path.endswith(".xlsx"):
             code_lines_df = pd.read_excel(data_path)
         elif  data_path.endswith(".csv"):

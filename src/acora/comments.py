@@ -22,7 +22,7 @@ ch = logging.StreamHandler()
 ch.setLevel(logging.DEBUG)
 logger.addHandler(ch)
 
-default_purpose_lables = [
+default_purpose_labels = [
     'acknowledgement', 
     'change_request', 
     'discussion_participation', 
@@ -59,7 +59,7 @@ def load_comments_files(data_paths, cols=None, sep=";"):
     """
     combined_files = []
     for data_path in data_paths:
-        logger.info(f"Loading training data from {data_path}")
+        logger.info(f"Loading data from {data_path}")
         if data_path.endswith(".xlsx"):
             reviews_df = pd.read_excel(data_path)
         elif  data_path.endswith(".csv"):
@@ -85,7 +85,7 @@ class CommentPurposeTransformer(object):
        allowing training a BERT classifier."""
 
     def __init__(self, training_data_df, purpose_column="purpose", 
-            purpose_labels=default_purpose_lables):
+            purpose_labels=default_purpose_labels):
         """Parameters
         ----------
         training_data_df : pd.DataFrame 

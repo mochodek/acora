@@ -70,3 +70,7 @@ The following scripts allow to provide recommendations for the reviewers on what
 * scripts/lines_to_bert_embeddings.py - this script uses a given BERT model to extract lines embeddings and save it to a file.
 
 * scripts/find_similar_lines.py - this script finds similar lines in the "database" to the provided lines (it requires line embeddings for the lines, see lines_to_bert_embeddings.py).
+
+## Recommendations to the reviewers
+
+* scripts/review_recommend.py - this script provides recommendations to the reviewers. It detects lines on which the reviewer should focus on and some hints concerning what to focus on.

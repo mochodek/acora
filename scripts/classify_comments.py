@@ -40,7 +40,7 @@ from acora.vocab import BERTVocab
 from acora.comments import default_subject_columns, \
     load_comments_files, CommentPurposeTransformer, CommentSubjectTransformer, \
     plot_purpose_confusion_matrix, plot_subjects_confusion_matrix, \
-    report_comment_predictions_accuracy, default_purpose_lables
+    report_comment_predictions_accuracy, default_purpose_labels
 
 logger = logging.getLogger(f'acora.{__file__}')
 logger.setLevel(logging.DEBUG)
@@ -83,7 +83,7 @@ if __name__ == '__main__':
                         type=str, default="purpose")
 
     parser.add_argument("--purpose_labels", help="a list of possible purpose labels (categories).",
-                        type=str, nargs="+", default=default_purpose_lables)
+                        type=str, nargs="+", default=default_purpose_labels)
 
     parser.add_argument("--subject_columns", help="a list of column names that store the decision classes for the comment subjects.",
                         type=str, nargs="+", default=default_subject_columns)
