@@ -16,8 +16,19 @@ The installer should download and install or the required Python packages. Howev
 
 ACoRA consists of a set of tools helping to build an automated pipeline supporting the code review process. They support data acquisition, models training, and classification. All of the scripts are located in the "scripts" folder. You can run each of them with the -h parameter to learn about the runtime parameter they accept. You can also check the "examples" folder to get examples of batch/bash runtime scripts.
 
-The ACoRA process consists of the following activities:
-TBD
+![ACoRA process](./acora.png)
+
+The ACoRA process consists of the following activities presented in the figure above:
+
+1. ACoRA detects a line that needs reviewer's attention.
+
+2. ACoRA looks for similar lines that have been commented on in the past. It prepares a summary for the reviewer about those comments - what was the most frequent purpose of the comments (e.g., reviewers requested some changes, or asked some questions) and what were the subjects of the comment (e.g., some problems related to code logic, naming, code style).
+
+3. The reviewer uses the provided information and decides to comment the line.
+
+4. The comment and the commented line is stored in the code reviews database. The purpose and subjects of the comment are predicted using a classifier.
+
+5. The information in the code reviews database can be used to train (or re-train) the classification models. In the case of comments, they should be manually classified (or at least the automated classification should be reviewed by a human expert). For the code lines, the process of determining the training dataset can be done automatically since we know which lines were commented on.
 
 ## Download reviews from Gerrit
 
@@ -33,7 +44,7 @@ In order to guide the focus of reviewers, we need to understand what the comment
 
 ACoRA provides the following scripts supporting this process:
 
-* scripts/train_bert_comments.py - this script is used to train a BERT-based classifier that simultaneously predicts the purpose and subject of a comment. Please keep it in mind that you need to download a pre-trained BERT model from https://github.com/google-research/bert. The trained model is saved to a file. 
+* scripts/train_bert_comments.py - this script is used to train a BERT-based classifier that simultaneously predicts the purpose and subject of a comment. Please keep it in mind that you need to download a pre-trained BERT model from https://github.com/google-research/bert. The trained model is saved to a file.
 
 * scripts/test_bert_comments.py - this script allows testing the accuracy of predictions being made by the previously trained review-comments classification model on a given dataset. The script will generate plots and will report quality prediction metrics (e.g., accuracy, precision, recall).
 
