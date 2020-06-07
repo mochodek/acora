@@ -22,11 +22,11 @@ The ACoRA process consists of the following activities presented in the figure a
 
 1. ACoRA detects a line that needs reviewer's attention.
 
-2. ACoRA looks for similar lines that have been commented on in the past. It prepares a summary for the reviewer about those comments - what was the most frequent purpose of the comments (e.g., reviewers requested some changes, or asked some questions) and what were the subjects of the comment (e.g., some problems related to code logic, naming, code style).
+2. ACoRA looks for similar lines that have been commented on. It prepares a summary for the reviewer about those comments - what was the most frequent purpose of the comments (e.g., reviewers requested some changes, or asked some questions) and what were the subjects of the comment (e.g., some problems related to code logic, naming, code style).
 
 3. The reviewer uses the provided information and decides to comment the line.
 
-4. The comment and the commented line is stored in the code reviews database. The purpose and subjects of the comment are predicted using a classifier.
+4. The comment and the commented line are stored in the code reviews database. The purpose and subjects of the comment are predicted using a classifier.
 
 5. The information in the code reviews database can be used to train (or re-train) the classification models. In the case of comments, they should be manually classified (or at least the automated classification should be reviewed by a human expert). For the code lines, the process of determining the training dataset can be done automatically since we know which lines were commented on.
 
