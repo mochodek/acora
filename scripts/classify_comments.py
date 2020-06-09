@@ -133,7 +133,11 @@ if __name__ == '__main__':
   
     config = ConfigProto( device_count = {'GPU': 0 if not_use_gpu else len(gpus)}, allow_soft_placement = True )
     sess = Session(config=config) 
-    keras.backend.set_session(sess)
+    
+    if tf.__version__.startswith("1."):
+            keras.backend.set_session(sess)
+    else:
+        tf.compat.v1.keras.backend.set_session(sess)
 
     logger.info(f"Loading vocabulary from {vocab_path}")
     vocab = BERTVocab.load_from_file(vocab_path)
@@ -144,6 +148,7 @@ if __name__ == '__main__':
     logger.info(f"BERT tokenizer ready, example: 'ACoRA is a nice tool' -> {str(tokenizer.tokenize('ACoRA is a nice tool'))}")
 
     logger.info("Loading the input data to classify...")
+    
     reviews_all_df = load_comments_files(classify_input_data_paths, cols, sep)
 
     logger.info("Tokenizing messages in the testing dataset...")
