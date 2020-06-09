@@ -106,7 +106,7 @@ if __name__ == '__main__':
     parser.add_argument("--epochs", help="a number of epochs to train the model.",
                         type=int, default=50)
 
-    parser.add_argument("--report_trainig_accuracy", help="to report the accuracy on the training dataset.",
+    parser.add_argument("--report_training_accuracy", help="to report the accuracy on the training dataset.",
                         action='store_true')
 
     parser.add_argument("--purpose_cm_train_path", help="a path to a file presenting a confusion matrix for the purpose output (for training).",

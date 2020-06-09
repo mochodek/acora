@@ -4,7 +4,7 @@ python ../../scripts/train_bert_comments.py  --training_data_paths ^
      --report_comments_lengths ^
      --weight_instances ^
      --epochs  100 ^
-     --report_trainig_accuracy ^
+     --report_training_accuracy ^
      --purpose_cm_train_path  "comment_purpose_train.pdf"  ^
      --subject_cm_train_path  "comment_subject_train.pdf"  ^
      --model_save_path  "bert_on_train_comments.h5" ^
