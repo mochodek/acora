@@ -32,7 +32,7 @@ with warnings.catch_warnings():
     import tensorflow as tf
     
     if tf.__version__.startswith("1."):
-            from tensorflow import ConfigProto, Session, set_random_seed
+        from tensorflow import ConfigProto, Session, set_random_seed
     else:
         from tensorflow.compat.v1 import ConfigProto, Session, set_random_seed
     
@@ -173,7 +173,10 @@ if __name__ == '__main__':
 
     config = ConfigProto( device_count = {'GPU': 0 if not_use_gpu else len(gpus)}, allow_soft_placement = True )
     sess = Session(config=config) 
-    keras.backend.set_session(sess)
+    if tf.__version__.startswith("1."):
+        keras.backend.set_session(sess)
+    else:
+        tf.compat.v1.keras.backend.set_session(sess)
 
     logger.info(f"Loading vocabulary from {vocab_path}")
     vocab = BERTVocab.load_from_file(vocab_path)
