@@ -148,7 +148,7 @@ if __name__ == '__main__':
     lr = args['learning_rate']
     batch_size = args['batch_size']
     epochs = args['epochs']
-    report_trainig_accuracy = args['report_trainig_accuracy']
+    report_training_accuracy = args['report_training_accuracy']
     purpose_cm_path = args['purpose_cm_train_path']
     subject_cm_path = args['subject_cm_train_path']
     model_save_path = args['model_save_path']
@@ -298,7 +298,7 @@ if __name__ == '__main__':
     logger.info(f"Saving the BERT model to {model_save_path}")
     model.save(model_save_path)
 
-    if report_trainig_accuracy:
+    if report_training_accuracy:
         y_all_pred_purpose, *y_all_pred_subject = model.predict(x_all) 
 
         logger.info("Preparing confusion matrix for the comment purpose.")
