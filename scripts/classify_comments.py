@@ -6,7 +6,7 @@ import argparse
 import logging
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # or any {'0', '1', '2'}
-logging.getLogger("tensorflow").setLevel(logging.INFO)
+logging.getLogger("tensorflow").setLevel(logging.ERROR)
 
 import pandas as pd
 import numpy as np
@@ -152,7 +152,7 @@ if __name__ == '__main__':
     reviews_all_df = load_comments_files(classify_input_data_paths, cols, sep)
 
     logger.info("Tokenizing messages in the testing dataset...")
-    tokenized_all_messages = [tokenizer.encode(text, max_len=seq_len)[0] for text in reviews_all_df[message_column].tolist()] 
+    tokenized_all_messages = [tokenizer.encode(str(text), max_len=seq_len)[0] for text in reviews_all_df[message_column].tolist()] 
     x_all = [np.array(tokenized_all_messages), np.zeros_like(tokenized_all_messages)]
   
     logger.info(f"Loading the BERT comment classification model from {model_trained_path}")
