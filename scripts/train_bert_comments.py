@@ -298,7 +298,7 @@ if __name__ == '__main__':
     logger.info(f"Saving the BERT model to {model_save_path}")
     model.save(model_save_path)
 
-    if report_trainig_accuracy:
+    if report_training_accuracy:
         y_all_pred_purpose, *y_all_pred_subject = model.predict(x_all) 
 
         logger.info("Preparing confusion matrix for the comment purpose.")
