@@ -6,7 +6,7 @@ import argparse
 import logging
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # or any {'0', '1', '2'}
-logging.getLogger("tensorflow").setLevel(logging.INFO)
+logging.getLogger("tensorflow").setLevel(logging.ERROR)
 import json
 
 import pandas as pd
@@ -148,7 +148,7 @@ if __name__ == '__main__':
     lr = args['learning_rate']
     batch_size = args['batch_size']
     epochs = args['epochs']
-    report_training_accuracy = args['report_training_accuracy']
+    report_trainig_accuracy = args['report_training_accuracy']
     purpose_cm_path = args['purpose_cm_train_path']
     subject_cm_path = args['subject_cm_train_path']
     model_save_path = args['model_save_path']
@@ -198,13 +198,13 @@ if __name__ == '__main__':
 
 
     if report_comments_lengths:
-        comments_lengths = [len(tokenizer.encode(text)[0]) for text in reviews_all_df[message_column].tolist()]
+        comments_lengths = [len(tokenizer.encode(str(text))[0]) for text in reviews_all_df[message_column].tolist()]
         logger.info("Message lengths distribution: 90% is {:.0f}, 95% is {:.0f}, 98% is {:.0f}, 99% is {:.0f}, and 100% is {}".format(
                 *np.percentile(comments_lengths, [90, 95, 98, 99, 100])))
         logger.info(f"Your selected sequence length corresponds to {stats.percentileofscore(comments_lengths, seq_len):.2f} percentile in the training dataset.")
 
     logger.info("Tokenizing messages in the training dataset...")
-    tokenized_all_messages = [tokenizer.encode(text, max_len=seq_len)[0] for text in reviews_all_df[message_column].tolist()] 
+    tokenized_all_messages = [tokenizer.encode(str(text), max_len=seq_len)[0] for text in reviews_all_df[message_column].tolist()] 
     x_all = [np.array(tokenized_all_messages), np.zeros_like(tokenized_all_messages)]
 
     logger.info("Transforming data for the purpose output variable...")
@@ -228,7 +228,7 @@ if __name__ == '__main__':
         config_path,
         checkpoint_path,
         training=False,
-        use_adapter=True,
+        #use_adapter=True,
         seq_len=seq_len,
         trainable=['Encoder-{}-MultiHeadSelfAttention-Adapter'.format(i + 1) for i in range(layer_num)] +
         ['Encoder-{}-FeedForward-Adapter'.format(i + 1) for i in range(layer_num)] +
@@ -314,7 +314,7 @@ if __name__ == '__main__':
 
     if train_size < 1.0:
         logger.info("Tokenizing messages in the validation dataset...")
-        tokenized_val_messages = [tokenizer.encode(text, max_len=seq_len)[0] for text in reviews_val_df[message_column].tolist()] 
+        tokenized_val_messages = [tokenizer.encode(str(text), max_len=seq_len)[0] for text in reviews_val_df[message_column].tolist()] 
         x_val = [np.array(tokenized_val_messages), np.zeros_like(tokenized_val_messages)]
 
         logger.info("Transforming data for the purpose output variable...")
