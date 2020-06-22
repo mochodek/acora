@@ -101,70 +101,57 @@ class GerritReviewDataDownloader(object):
                         revisions = change['revisions']
 
                         for rev_id in list(revisions.keys()):
-                            current_comment = self.client.get(f'/changes/{change_id}/revisions/{rev_id}/comments', 
-                                                                headers={'Content-Type': 'application/json'})
-                            
-                            # not all revisions have comments, so we only look for those that have them
-                            if len(current_comment) > 0:                
-                                for one_file, one_comment in current_comment.items():                    
-                                    try:
-                                        # this code extracts information about the comment 
-                                        # things like which file and which lines
-                                        for one_comment_item in one_comment:
-                                            file_str = one_file
-                                            
-                                            # a few if-s because not always all parameters are there
-                                            if 'line' in one_comment_item:
-                                                line_str = one_comment_item['line']
-                                            else:
-                                                line_str = ''
+                            try:
+                                current_comment = self.client.get(f'/changes/{change_id}/revisions/{rev_id}/comments', 
+                                                                    headers={'Content-Type': 'application/json'})
+                                
+                                # not all revisions have comments, so we only look for those that have them
+                                if len(current_comment) > 0:                
+                                    for one_file, one_comment in current_comment.items():                    
+                                        try:
+                                            # this code extracts information about the comment 
+                                            # things like which file and which lines
+                                            for one_comment_item in one_comment:
+                                                file_str = one_file
+                                                
+                                                # a few if-s because not always all parameters are there
+                                                if 'line' in one_comment_item:
+                                                    line_str = one_comment_item['line']
+                                                else:
+                                                    line_str = ''
 
-                                            if 'message' in one_comment_item:
-                                                message_str = one_comment_item['message']
-                                            else:
-                                                message_str = ''
-                                            
-                                            # if there is a specific line and characters as comments
-                                            if 'range' in one_comment_item:
-                                                start_line_str = one_comment_item['range']['start_line']
-                                                end_line_str = one_comment_item['range']['end_line']                      
-                                            else:                            
-                                                start_line_str = '0'
-                                                end_line_str = '0'
+                                                if 'message' in one_comment_item:
+                                                    message_str = one_comment_item['message']
+                                                else:
+                                                    message_str = ''
+                                                
+                                                # if there is a specific line and characters as comments
+                                                if 'range' in one_comment_item:
+                                                    start_line_str = one_comment_item['range']['start_line']
+                                                    end_line_str = one_comment_item['range']['end_line']                      
+                                                else:                            
+                                                    start_line_str = '0'
+                                                    end_line_str = '0'
 
-                                            # if we can extract something from a file
-                                            # then here is where we do it
-                                            if line_str != '':
-                                                # we need the line below to properly encode the filename as URL
-                                                url_file_id = urllib.parse.quote_plus(file_str)
-                                                file_content_string = f'/changes/{change_id}/revisions/{rev_id}/files/{url_file_id}/content'
-                                                file_contents = self.client.get(file_content_string, headers={'Content-Type': 'application/json'})
-                                                file_lines = file_contents.split("\n")
+                                                # if we can extract something from a file
+                                                # then here is where we do it
+                                                if line_str != '':
+                                                    # we need the line below to properly encode the filename as URL
+                                                    url_file_id = urllib.parse.quote_plus(file_str)
+                                                    file_content_string = f'/changes/{change_id}/revisions/{rev_id}/files/{url_file_id}/content'
+                                                    file_contents = self.client.get(file_content_string, headers={'Content-Type': 'application/json'})
+                                                    file_lines = file_contents.split("\n")
 
-                                                # if we have the lines delimitations (comment that is linked to lines)
-                                                if start_line_str != '0':
-                                                    start_line = int(start_line_str) - 1
-                                                    if end_line_str != '0':
-                                                        end_line = int(end_line_str) - 1  
-                                                    else: 
-                                                        end_line = len(file_lines) - 1
+                                                    # if we have the lines delimitations (comment that is linked to lines)
+                                                    if start_line_str != '0':
+                                                        start_line = int(start_line_str) - 1
+                                                        if end_line_str != '0':
+                                                            end_line = int(end_line_str) - 1  
+                                                        else: 
+                                                            end_line = len(file_lines) - 1
 
-                                                    for one_line in file_lines[start_line:end_line]:
-                                                        str_to_csv = str(change_id) + sep + \
-                                                        date_created_str + sep + \
-                                                        str(rev_id) + sep + \
-                                                        file_str + sep + \
-                                                        str(line_str) + sep + \
-                                                        str(start_line_str) + sep + \
-                                                        str(end_line_str) + sep + \
-                                                        one_line.replace("\n", " _ ").replace('\r', '_').replace(sep, '_') + sep + \
-                                                        message_str.replace("\n", " _ ").replace('\r', '_').replace(sep, '_')
-                                                        out.write(str_to_csv + "\n")
-                                                elif int(line_str) < len(file_lines):                                
-                                                    # and if there are no delimitation, but there is a starting line
-                                                    # and the starting line is below the end of the file
-                                                    one_line = file_lines[int(line_str)-1]
-                                                    str_to_csv = str(change_id) + sep + \
+                                                        for one_line in file_lines[start_line:end_line]:
+                                                            str_to_csv = str(change_id) + sep + \
                                                             date_created_str + sep + \
                                                             str(rev_id) + sep + \
                                                             file_str + sep + \
@@ -173,27 +160,44 @@ class GerritReviewDataDownloader(object):
                                                             str(end_line_str) + sep + \
                                                             one_line.replace("\n", " _ ").replace('\r', '_').replace(sep, '_') + sep + \
                                                             message_str.replace("\n", " _ ").replace('\r', '_').replace(sep, '_')
-                                                    out.write(str_to_csv + "\n")
-                                            else: 
-                                                # there is no line specified, then we take the comment for the entire file
-                                                for one_line in file_lines:
+                                                            out.write(str_to_csv + "\n")
+                                                    elif int(line_str) < len(file_lines):                                
+                                                        # and if there are no delimitation, but there is a starting line
+                                                        # and the starting line is below the end of the file
+                                                        one_line = file_lines[int(line_str)-1]
                                                         str_to_csv = str(change_id) + sep + \
-                                                        date_created_str + sep + \
-                                                        str(rev_id) + sep + \
-                                                        file_str + sep + \
-                                                        str(line_str) + sep + \
-                                                        str(start_line_str) + sep + \
-                                                        str(end_line_str) + sep + \
-                                                        one_line.replace("\n", " _ ").replace('\r', '_').replace(sep, '_') + sep + \
-                                                        message_str.replace("\n", " _ ").replace('\r', '_').replace(sep, '_')
+                                                                date_created_str + sep + \
+                                                                str(rev_id) + sep + \
+                                                                file_str + sep + \
+                                                                str(line_str) + sep + \
+                                                                str(start_line_str) + sep + \
+                                                                str(end_line_str) + sep + \
+                                                                one_line.replace("\n", " _ ").replace('\r', '_').replace(sep, '_') + sep + \
+                                                                message_str.replace("\n", " _ ").replace('\r', '_').replace(sep, '_')
                                                         out.write(str_to_csv + "\n")
+                                                else: 
+                                                    # there is no line specified, then we take the comment for the entire file
+                                                    for one_line in file_lines:
+                                                            str_to_csv = str(change_id) + sep + \
+                                                            date_created_str + sep + \
+                                                            str(rev_id) + sep + \
+                                                            file_str + sep + \
+                                                            str(line_str) + sep + \
+                                                            str(start_line_str) + sep + \
+                                                            str(end_line_str) + sep + \
+                                                            one_line.replace("\n", " _ ").replace('\r', '_').replace(sep, '_') + sep + \
+                                                            message_str.replace("\n", " _ ").replace('\r', '_').replace(sep, '_')
+                                                            out.write(str_to_csv + "\n")
 
-                                    except:
-                                        # this is a brutal exception handling, but we cannot check for all problems
-                                        self.logger.info('Unhandled exception, moving on')
-                                        self.logger.error(traceback.format_exc())
-                                        self.logger.error(one_comment)
-                    
+                                        except:
+                                            # this is a brutal exception handling, but we cannot check for all problems
+                                            self.logger.info('Unhandled exception, moving on')
+                                            self.logger.error(traceback.format_exc())
+                                            self.logger.error(one_comment)
+                            except:
+                                self.logger.info('Unhandled exception, moving on')
+                                self.logger.error(traceback.format_exc())
+                                self.logger.error(rev_id)
                 
                     if has_more:
                         start += n
