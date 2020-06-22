@@ -227,13 +227,9 @@ if __name__ == '__main__':
     model = load_trained_model_from_checkpoint(
         config_path,
         checkpoint_path,
-        training=False,
-        #use_adapter=True,
+        training=True,
+        trainable=True,
         seq_len=seq_len,
-        trainable=['Encoder-{}-MultiHeadSelfAttention-Adapter'.format(i + 1) for i in range(layer_num)] +
-        ['Encoder-{}-FeedForward-Adapter'.format(i + 1) for i in range(layer_num)] +
-        ['Encoder-{}-MultiHeadSelfAttention-Norm'.format(i + 1) for i in range(layer_num)] +
-        ['Encoder-{}-FeedForward-Norm'.format(i + 1) for i in range(layer_num)],
     )
 
     logger.info("Transforming BERT model to classify comments...")
@@ -298,7 +294,7 @@ if __name__ == '__main__':
     logger.info(f"Saving the BERT model to {model_save_path}")
     model.save(model_save_path)
 
-    if report_training_accuracy:
+    if report_trainig_accuracy:
         y_all_pred_purpose, *y_all_pred_subject = model.predict(x_all) 
 
         logger.info("Preparing confusion matrix for the comment purpose.")
