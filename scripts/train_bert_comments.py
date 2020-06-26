@@ -234,8 +234,7 @@ if __name__ == '__main__':
 
     logger.info("Transforming BERT model to classify comments...")
     inputs = model.inputs[:2]
-    dense = model.get_layer(f'Encoder-{layer_num}-FeedForward-Norm').output
-    dense = Extract(index=0)(dense)
+    dense = model.get_layer('NSP-Dense').output
 
     losses = {
         "purpose_output": "categorical_crossentropy",
