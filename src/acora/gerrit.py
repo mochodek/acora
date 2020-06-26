@@ -240,7 +240,7 @@ class GerritReviewDataDownloader(object):
             If provided, only not newer changes will be returned.
         """
 
-        with open(filename, 'w', encoding='utf-8', errors='ingore') as out:
+        with open(filename, 'w', encoding='utf-8', errors='ignore') as out:
             out.write(f'change_id{sep}date{sep}revision_id{sep}filename{sep}line_contents\n')
 
             start = 0
