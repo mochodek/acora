@@ -301,3 +301,47 @@ def report_comment_predictions_accuracy(y_pred_purpose, y_purpose, y_pred_subjec
 
 
 
+def save_comment_predictions_accuracy(y_pred_purpose, y_purpose, 
+        y_pred_subject, y_subject, subject_columns, output_file_path, sep, name=None):
+    """ Calculates prediction quality metrics and prints them."""
+
+    if name is None:
+        name = output_file_path
+
+    with open(output_file_path, 'w', encoding='utf-8', errors='ignore') as out:
+
+        header = ['name', 'p_acc', 'p_prec', 'p_rec', 'p_f1', 'p_mcc']
+        for subject in subject_columns:
+            header += [f's_{subject}_acc', f's_{subject}_prec', 
+                f's_{subject}_rec', f's_{subject}_f1', f's_{subject}_mcc']
+        header_line = f"{sep}".join(header)
+        out.write(header_line + "\n")
+
+        y_pred_purpose_flat = np.argmax(y_pred_purpose, axis=1)
+        y_purpose_flat = np.argmax(y_purpose, axis=1)
+        
+        purpose_acc = accuracy_score(y_purpose_flat, y_pred_purpose_flat)
+        purpose_f1 = f1_score(y_purpose_flat, y_pred_purpose_flat, average="macro")
+        purpose_precision = precision_score(y_purpose_flat, y_pred_purpose_flat, average="macro")
+        purpose_recall = precision_score(y_purpose_flat, y_pred_purpose_flat, average="macro")
+        purpose_mcc = mcc_score(y_purpose_flat, y_pred_purpose_flat)
+
+        line = [name, purpose_acc, purpose_precision, purpose_recall, purpose_f1, purpose_mcc]
+
+        y_pred_subject = np.array(y_pred_subject).reshape(len(y_pred_subject),len(y_pred_subject[0])).transpose()
+        subject_all_preds = []
+        for preds in y_pred_subject:
+            subject_all_preds.append([1 if x > 0.5 else 0 for x in preds]) 
+        subject_preds_df = pd.DataFrame(subject_all_preds, columns=subject_columns)
+
+        for subject in subject_columns:
+            subject_acc = accuracy_score(y_subject[subject], subject_preds_df[subject])
+            subject_f1 = f1_score(y_subject[subject], subject_preds_df[subject], average="macro")
+            subject_precision = precision_score(y_subject[subject], subject_preds_df[subject], average="macro")
+            subject_recall = precision_score(y_subject[subject], subject_preds_df[subject], average="macro")
+            subject_mcc = mcc_score(y_subject[subject], subject_preds_df[subject])
+            line += [subject_acc, subject_precision, subject_recall, subject_f1, subject_mcc]
+
+        line = f"{sep}".join([str(x) for x in line])
+        out.write(line + "\n")
+
