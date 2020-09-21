@@ -28,7 +28,10 @@ def process_tree(tree, file_extensions, logger):
     for i, obj in enumerate(tree):
         if obj.type_str == 'blob' and Path(obj.name).suffix in file_extensions:
             print(f"Reading the file: {obj.name}")
-            lines = obj.data.decode("utf-8").split("\n")
+            try:
+                lines = obj.data.decode("utf-8").split("\n")
+            except:
+                lines = []
             print(f"Extracted {len(lines):,} lines from the  {obj.name}")
             result.append(lines)
         if obj.type_str == 'tree':
