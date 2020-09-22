@@ -26,7 +26,8 @@ with warnings.catch_warnings():
 
     import keras
     from keras import backend as K
-    from keras_bert import get_model, compile_model, gen_batch_inputs
+    from keras.models import load_model
+    from keras_bert import get_model, compile_model, gen_batch_inputs, get_custom_objects
 
     from keras_radam import RAdam
 
@@ -41,7 +42,7 @@ with warnings.catch_warnings():
 
 
 from acora.vocab import BERTVocab
-from acora.lamb import compile_model_lamb
+from acora.lamb import compile_model_lamb, Lamb
 
 logger = logging.getLogger(f'acora.{__file__}')
 logger.setLevel(logging.DEBUG)
@@ -77,6 +78,10 @@ if __name__ == '__main__':
     parser.add_argument("--bert_config_path",
                         help="a path to a BERT config .json file (the same format is used as in the original BERT.).", 
                         type=str, default="./bert_config.json")
+
+    parser.add_argument("--model_path",
+                        help="a path to a BERT model that you want to continue training.).", 
+                        type=str, default=None)
 
     parser.add_argument("--use_adapter",
                         help="to use the adapter mechanism which reduces the number of parameters when fine-tuning the model later on.", 
@@ -118,6 +123,7 @@ if __name__ == '__main__':
     epochs = args['epochs']
     model_save_path = args['model_save_path']
     use_adapter = args['use_adapter']
+    model_path = args['model_path']
     optimizer = args['optimizer']
     if optimizer not in ['Lamb', "RAdam"]:
         logger.error(f"{optimizer} is not a supported optimizer.")
@@ -138,44 +144,55 @@ if __name__ == '__main__':
     vocab = BERTVocab.load_from_file(vocab_path, limit=vocab_size)
     logger.info(f"Loaded {vocab.size:,} vocab entries.")
 
-    logger.info(f"Loading the BERT config from {bert_config_path}")
-    with open(bert_config_path, encoding="utf-8", errors="ignore") as f:
-        bert_config = json.load(f)
+    if model_path is None:
 
-    np.random.seed(random_seed)
-    set_random_seed(random_seed)
+        logger.info(f"Loading the BERT config from {bert_config_path}")
+        with open(bert_config_path, encoding="utf-8", errors="ignore") as f:
+            bert_config = json.load(f)
 
-    logger.info(f"Creating a model...")
-    model = get_model(token_num=vocab.size, #vocab_size
-        pos_num=bert_config['max_position_embeddings'],  #max_position_embeddings
-        seq_len=seq_len,
-        embed_dim=bert_config['hidden_size'], #hidden_size
-        transformer_num=bert_config['num_hidden_layers'], #num_hidden_layers
-        head_num=bert_config['num_attention_heads'], #num_attention_heads
-        feed_forward_dim=bert_config['intermediate_size'], #intermediate_size
-        feed_forward_activation=bert_config['hidden_act'], #hidden_act
-        dropout_rate=0.1,
-        attention_activation=None,
-        training=True,
-        trainable=True,
-        use_adapter=use_adapter, 
-    )
-    model.name="BERT4Code"
+        np.random.seed(random_seed)
+        set_random_seed(random_seed)
 
-    # set adapter non-trainable:
-    if use_adapter:
-        for layer in model.layers:
-            if "Adapter" in layer.name:
-                new_weights = []
-                for weights in layer.get_weights():
-                    new_weights.append(np.ones(weights.shape))
-                layer.set_weights(new_weights)
-                layer.trainable = False
+        logger.info(f"Creating a model...")
+        model = get_model(token_num=vocab.size, #vocab_size
+            pos_num=bert_config['max_position_embeddings'],  #max_position_embeddings
+            seq_len=seq_len,
+            embed_dim=bert_config['hidden_size'], #hidden_size
+            transformer_num=bert_config['num_hidden_layers'], #num_hidden_layers
+            head_num=bert_config['num_attention_heads'], #num_attention_heads
+            feed_forward_dim=bert_config['intermediate_size'], #intermediate_size
+            feed_forward_activation=bert_config['hidden_act'], #hidden_act
+            dropout_rate=0.1,
+            attention_activation=None,
+            training=True,
+            trainable=True,
+            use_adapter=use_adapter, 
+        )
+        model.name="BERT4Code"
 
-    if optimizer == "RAdam":
-        compile_model(model)
-    elif optimizer == "Lamb":
-        compile_model_lamb(model) 
+        # set adapter non-trainable:
+        if use_adapter:
+            for layer in model.layers:
+                if "Adapter" in layer.name:
+                    new_weights = []
+                    for weights in layer.get_weights():
+                        new_weights.append(np.ones(weights.shape))
+                    layer.set_weights(new_weights)
+                    layer.trainable = False
+
+        if optimizer == "RAdam":
+            compile_model(model)
+        elif optimizer == "Lamb":
+            compile_model_lamb(model) 
+        
+
+    else:
+        logger.info(f"Loading a model to continue training it...")
+        custom_objects = get_custom_objects()
+        custom_objects['RAdam'] = RAdam
+        custom_objects['Lamb'] = Lamb
+        model = keras.models.load_model(model_path, custom_objects=custom_objects)
+    
     model.summary(print_fn=logger.info)
 
     def _generator(batch_size, file_paths, token_dict, token_list, seq_len, shuffle=True):  
@@ -192,7 +209,7 @@ if __name__ == '__main__':
                     line_pairs = []
                     gc.collect()
 
-                with open(line_files_to_read.pop()) as f:
+                with open(line_files_to_read.pop(), encoding='utf-8') as f:
                     line_pairs.extend(json.load(f))
                 
             batch_pairs = line_pairs[:batch_size]
@@ -212,7 +229,7 @@ if __name__ == '__main__':
     def calculate_steps_per_epoch(batch_size, file_paths):
         steps = 0
         for file_path in file_paths:
-            with open(file_path) as f:
+            with open(file_path, encoding='utf-8') as f:
                 steps += len(json.load(f))
         return steps // batch_size 
                 
