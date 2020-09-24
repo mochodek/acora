@@ -197,7 +197,7 @@ if __name__ == '__main__':
         logger.error(f"Wrong file type of {output_dataset_path}. Only csv and xlsx files are supported.")
         exit(1)
 
-    if lines_with_comments_path_extension == '.xslx':
+    if lines_with_comments_path_extension == '.xlsx':
         lines_with_comments_df = pd.read_excel(lines_with_comments_path)
     else:
         lines_with_comments_df = pd.read_csv(lines_with_comments_path, sep=sep)
