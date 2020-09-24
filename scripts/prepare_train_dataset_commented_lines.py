@@ -118,7 +118,7 @@ if __name__ == '__main__':
                         type=str, required=True)
 
     parser.add_argument("--lines_path",
-                        help="a path to a xlsx or csv file with commented lines.",
+                        help="a path to a xlsx or csv file with lines.",
                         type=str, required=True)
 
     parser.add_argument("--output_dataset_path",
