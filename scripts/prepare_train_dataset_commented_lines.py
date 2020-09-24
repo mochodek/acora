@@ -201,7 +201,9 @@ if __name__ == '__main__':
         lines_with_comments_df = pd.read_excel(lines_with_comments_path)
     else:
         lines_with_comments_df = pd.read_csv(lines_with_comments_path, sep=sep)
+
     lines_with_comments_df[line_column] = lines_with_comments_df[line_column].fillna("")
+    lines_with_comments_df[review_change_column] = lines_with_comments_df[review_change_column].fillna("")
     logger.info(f"Loaded {lines_with_comments_df.shape[0]:,} lines with comments from {lines_with_comments_path}")
 
     if lines_path_extension == '.xlsx':
@@ -209,6 +211,7 @@ if __name__ == '__main__':
     else:
         lines_df = pd.read_csv(lines_path, sep=sep)
     lines_df[line_column] = lines_df[line_column].fillna("")
+    lines_df[review_change_column] = lines_df[review_change_column].fillna("")
     logger.info(f"Loaded {lines_df.shape[0]:,} lines from {lines_path}")
 
     logger.info(f"Removing empty lines...")
