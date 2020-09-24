@@ -1,7 +1,6 @@
-python ../../scripts/train_bert_comments.py  --training_data_paths ^
+python ../../scripts/train_bert_commented_lines.py  --training_data_paths ^
      "data\wireshark_train_detecting_commented_lines.csv" ^
      --bert_pretrained_path  "bert_pretrained_on_code.h5" ^
-     --use_adapter ^
      --vocab_path "data\vocab.txt" ^
      --vocab_size 10000 ^
      --weight_instances ^
