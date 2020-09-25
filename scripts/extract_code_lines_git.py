@@ -49,7 +49,7 @@ if __name__ == '__main__':
 
     parser.add_argument("--output_lines_path",
                         help="a path to an output .json file with the extracted lines.", 
-                        type=str, default=".lines.json")
+                        type=str, default="lines.json")
 
     parser.add_argument("--repo_path",
                         help="a path to local directory of the repository.", 
