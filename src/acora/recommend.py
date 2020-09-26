@@ -56,6 +56,7 @@ class CodeReviewFocusRecommender():
         self.logger.debug('Extracting embeddings...')
         embeddings = self.embeddings_extractor.extract_embeddings(suspicious_lines)
         self.logger.debug('Finding similar lines...')
+        
         similar_lines_dict = self.similarity_finder.query_to_dict(suspicious_lines, embeddings)
 
         self.logger.debug("Processing the results of classification")

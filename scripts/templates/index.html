@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+
+    <title>ACORA Demo</title>
+  </head>
+  <body>
+    <h1>ACORA Demo</h1>
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col">
+                <form method="POST" action="/">
+                    <div class="mb-3">
+                        <label for="validationTextarea">Please paste your code here:</label>
+                        <textarea name="code" class="form-control" id="validationTextarea" placeholder="" required></textarea>
+                        <div class="invalid-feedback">
+                          Please enter some code here.
+                        </div>
+                      </div>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                  </form>
+            </div>
+
+        </div>
+
+        <h2> Review focus: </h2>
+        {% for line_result in review_results %}
+        <div class="row" style="{{'background-color:#ffcccb;' if line_result[1] == 1 }}">
+            <div class="col-sm-1">
+                <pre><code>{{loop.index}}</code></pre>
+            </div>
+            <div class="col-sm-5">
+                <pre><code>{{line_result[0]}}</code></pre>
+            </div>
+            <div class="col-sm-2">
+                {% if 'change_request' in line_result[2]['purpose'] %}
+                    <span class="badge badge-danger">change_request {{'{0:0.1f}'.format(line_result[2]['purpose']['change_request']*100)}}%</span>
+                {% endif %}
+                {% if 'discussion_trigger' in line_result[2]['purpose'] %}
+                    <span class="badge badge-warning">discussion_trigger {{'{0:0.1f}'.format(line_result[2]['purpose']['discussion_trigger']*100)}}%</span>
+                {% endif %}
+                {% if 'discussion_participation' in line_result[2]['purpose'] %}
+                    <span class="badge badge-warning">discussion_participation {{'{0:0.1f}'.format(line_result[2]['purpose']['discussion_participation']*100)}}%</span>
+                {% endif %}
+            </div>
+            <div class="col-sm-4">
+                {% for subject in line_result[2]['subject'] %}
+                    {% if line_result[2]['subject'][subject] > 0 %}
+                        <span class="badge badge-success">{{subject}} {{'{0:0.1f}'.format(line_result[2]['subject'][subject]*100)}}%</span>
+                    {% endif %}
+                {% endfor %}
+                {% if line_result[1] == 1 %}
+                    <a class="badge badge-primary" data-toggle="collapse" href="#collapse{{loop.index}}" role="button" 
+                        aria-expanded="false" aria-controls="collapse{{loop.index}}">
+                        Show similar
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="collapse" id="collapse{{loop.index}}">
+            <div class="card card-body">
+                {% for commented_line in line_result[2]['comments_lines'] %}
+                    <div>
+                        <verb><span class="badge badge-dark">{{commented_line}}</span></verb> - <span class="badge badge-info">{{line_result[2]['comments_messages'][loop.index-1]}}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>
+  </body>
+</html>
