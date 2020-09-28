@@ -69,7 +69,7 @@
             <div class="card card-body">
                 {% for commented_line in line_result[2]['comments_lines'] %}
                     <div>
-                        <verb><span class="badge badge-dark">{{commented_line}}</span></verb> - <span class="badge badge-info">{{line_result[2]['comments_messages'][loop.index-1]}}</span>
+                        <verb><span class="badge badge-dark">{{commented_line}}</span></verb> - {{line_result[2]['comments_messages'][loop.index-1]}}
                     </div>
                 {% endfor %}
             </div>

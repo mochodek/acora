@@ -137,6 +137,9 @@ if __name__ == '__main__':
     parser.add_argument("--seq_len", help="a maximum length of a line (in the number of tokens).",
                         type=int, default=128)
 
+    parser.add_argument("--host", help="a host name to serve at.",
+                        type=str, default="127.0.0.1")
+
     parser.add_argument("--port", help="a number of port to run the server on.",
                         type=int, default=8888)
 
@@ -165,6 +168,7 @@ if __name__ == '__main__':
     bert_pretrained_path = args['bert_pretrained_path']
     sep = args['sep']
     port = args['port']
+    host = args['host']
     cut_off_percentile = args['cut_off_percentile']
     line_column = args['line_column']
     message_column = args['message_column']
@@ -248,7 +252,7 @@ if __name__ == '__main__':
                         classify_threshold=0.5)
 
     app.config['TEMPLATES_AUTO_RELOAD'] = True
-    app.run(host='127.0.0.1', port=port)
+    app.run(host=host, port=port)
 
 
 
