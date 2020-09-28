@@ -53,11 +53,11 @@ class CodeReviewFocusRecommender():
         review_decisions = self._detect_lines_to_comment(lines)
         suspicious_lines = list({line for i, line in enumerate(lines) if review_decisions[i] == 1})
 
-        self.logger.debug('Extracting embeddings...')
-        embeddings = self.embeddings_extractor.extract_embeddings(suspicious_lines)
-        self.logger.debug('Finding similar lines...')
-        
-        similar_lines_dict = self.similarity_finder.query_to_dict(suspicious_lines, embeddings)
+        if len(suspicious_lines) > 0:
+            self.logger.debug('Extracting embeddings...')
+            embeddings = self.embeddings_extractor.extract_embeddings(suspicious_lines)
+            self.logger.debug('Finding similar lines...')
+            similar_lines_dict = self.similarity_finder.query_to_dict(suspicious_lines, embeddings)
 
         self.logger.debug("Processing the results of classification")
         for i, decision in enumerate(review_decisions):
