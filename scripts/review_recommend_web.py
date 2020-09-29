@@ -14,6 +14,7 @@ from flask import Flask, render_template, request
 from math import nan
 
 import pandas as pd
+import numpy as np
 
 from pathlib import Path
 
@@ -156,6 +157,9 @@ if __name__ == '__main__':
 
     parser.add_argument("--no_layers", help="the number of layers to include while extracting embeddings.",
                         default=4, type=int)
+
+    parser.add_argument("--random_seed", help="a random seed used to control the process.",
+                        type=int, default=102329)
     
     args = vars(parser.parse_args())
     logger.info(f"Run parameters: {str(args)}")
@@ -180,6 +184,7 @@ if __name__ == '__main__':
     vocab_size = args['vocab_size']
     not_use_gpu = args['not_use_gpu']
     no_layers = args['no_layers']
+    random_seed = args['random_seed']
     
     ######
 
@@ -202,7 +207,9 @@ if __name__ == '__main__':
     logger.info(f"Loaded {len(lines_database)} reference lines.")
     
     logger.info(f"Fitting a similarity line finder...")
-    finder = SimilarLinesFinder(cut_off_percentile=cut_off_percentile, cut_off_sample=150, max_similar=None)
+    np.random.seed(random_seed)
+    random.seed(random_seed)
+    finder = SimilarLinesFinder(cut_off_percentile=cut_off_percentile, cut_off_sample=200, max_similar=None)
     finder.fit(lines_database, embeddings_database)
 
     logger.info(f"Loading vocabulary from {vocab_path}")
