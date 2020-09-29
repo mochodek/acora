@@ -1,0 +1,10 @@
+name: acora
+ 
+dependencies:
+    - python=3.6.5
+    - tensorflow<=1.13.1
+    - jupyter
+    - pip
+
+
+        
