@@ -85,3 +85,5 @@ The following scripts allow to provide recommendations for the reviewers on what
 ## Recommendations to the reviewers
 
 * scripts/review_recommend.py - this script provides recommendations to the reviewers. It detects lines on which the reviewer should focus on and some hints concerning what to focus on.
+
+* scripts/review_recommend_web.py - this script runs a simple demo internet app that allows you to try acora.
