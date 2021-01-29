@@ -48,7 +48,11 @@ class SimilarLinesFinder():
 
         if self.cut_off_percentile is not None:
             self.logger.debug(f"Calcuating the cut off point for similarity...")
-            dist_all, _ = self.nbrs.kneighbors(random.sample(self.reference_lines_embeddings, self.cut_off_sample), 
+            if self.cut_off_sample <= len(self.reference_lines):
+                sample_size = self.cut_off_sample
+            else:
+                sample_size = len(self.reference_lines)
+            dist_all, _ = self.nbrs.kneighbors(random.sample(self.reference_lines_embeddings, sample_size ), 
                               n_neighbors=2, 
                               return_distance=True)
             distances = [x[1] for x in dist_all]
