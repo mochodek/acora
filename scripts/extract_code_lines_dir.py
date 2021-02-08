@@ -6,7 +6,7 @@ import argparse
 import logging
 import os
 from pathlib import Path
-import json
+import json, glob
 
 logger = logging.getLogger(f'acora.{__file__}')
 logger.setLevel(logging.DEBUG)
@@ -56,7 +56,7 @@ if __name__ == '__main__':
 
     src_code_paths = []
     for ext in file_extensions:
-        src_code_paths.extend([str(x) for x in Path(code_path).glob(f"**/*{ext}")])
+        src_code_paths.extend([str(x) for x in glob.glob(os.path.join(code_path,"**", f"*{ext}"), recursive=True)])
     logger.info(f"Found {len(src_code_paths)} files to be processed.")
 
     logger.info(f"Starting extracting lines...")
