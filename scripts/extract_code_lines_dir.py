@@ -33,6 +33,10 @@ if __name__ == '__main__':
                         help="a list of file extensions to be scanned (e.g., .txt, .c, .cpp, .h).", 
                         type=str, nargs="+")
 
+    parser.add_argument("--limit_files",
+                        help="if set limits the number of files to the given number.", 
+                        type=int, default=None)
+
 
     args = vars(parser.parse_args())
     logger.info(f"Run parameters: {str(args)}")
@@ -42,6 +46,7 @@ if __name__ == '__main__':
     code_path = args['code_path']
     output_lines_path = args['output_lines_path']
     file_extensions = args['file_extensions']
+    limit_files = args['limit_files']
     
     ######
 
@@ -61,12 +66,17 @@ if __name__ == '__main__':
 
     logger.info(f"Starting extracting lines...")
     lines = []
+    if limit_files is not None:
+        src_code_paths = src_code_paths[:limit_files]
     for code_file_path in src_code_paths:
         logger.info(f"Extracting lines from {code_file_path}")
         rel_path = os.path.relpath(code_file_path, code_path)
-        with open(code_file_path, "r", encoding='utf-8', errors="ignore") as f:
-            new_lines = f.readlines()
-            lines.append(new_lines)
+        try:
+            with open(code_file_path, "r", encoding='utf-8', errors="ignore") as f:
+                new_lines = f.readlines()
+                lines.append(new_lines)
+        except:
+            logger.debug(f"Couldn't open {code_file_path}")
         logger.info(f"Extracted {len(new_lines)} lines from {code_file_path}")
 
 
