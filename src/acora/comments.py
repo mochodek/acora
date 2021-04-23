@@ -4,6 +4,8 @@ import numpy as np
 
 import logging
 
+import math
+
 from sklearn.utils import class_weight
 from sklearn.metrics import confusion_matrix, multilabel_confusion_matrix
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
@@ -212,7 +214,7 @@ def plot_purpose_confusion_matrix(y_pred_purpose, y_purpose,
 
 def plot_subjects_confusion_matrix(y_pred_subject, y_subject, 
         subject_columns, subject_cm_path,
-        figsize=(12,16), cmap='Greens'):
+        figsize=(10,20), cmap='Greens'):
     """Generates and saves a confusion matrix plot to a file."""
 
     y_pred_subject = np.array(y_pred_subject).reshape(len(y_pred_subject),len(y_pred_subject[0])).transpose()
@@ -224,14 +226,16 @@ def plot_subjects_confusion_matrix(y_pred_subject, y_subject,
     cf_matrix_all_subject = multilabel_confusion_matrix(y_subject, subject_preds_df.values, samplewise=False)
 
     fig = plt.figure(figsize=figsize)
-    gs = gridspec.GridSpec(4, 3, height_ratios=[1, 1, 1, 1])
-    gs.update(hspace=0.4)
+    cols = math.ceil(float(len(subject_columns)) / 2.0)
+    print(cols)
+    gs = gridspec.GridSpec(cols, 2, height_ratios=[1]*cols)
+    gs.update(hspace=0.4, wspace=0.5)
 
     for i, cf in enumerate(cf_matrix_all_subject):
         
-        row = i // 3
-        col = i % 3
-        
+        row = i // 2
+        col = i % 2
+        print(row, col)
         ax = plt.subplot(gs[row, col])
         
         cmn = cf.astype('float') / cf.sum(axis=1)[:, np.newaxis]

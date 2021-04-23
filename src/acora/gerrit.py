@@ -158,8 +158,8 @@ class GerritReviewDataDownloader(object):
                                                             str(line_str) + sep + \
                                                             str(start_line_str) + sep + \
                                                             str(end_line_str) + sep + \
-                                                            one_line.replace("\n", " _ ").replace('\r', '_').replace(sep, '_') + sep + \
-                                                            message_str.replace("\n", " _ ").replace('\r', '_').replace(sep, '_')
+                                                            one_line.replace("\n", " ").replace('\r', ' ').replace(sep, ' ') + sep + \
+                                                            message_str.replace("\n", "  ").replace('\r', '').replace(sep, ' ')
                                                             out.write(str_to_csv + "\n")
                                                     elif int(line_str) < len(file_lines):                                
                                                         # and if there are no delimitation, but there is a starting line
@@ -172,8 +172,8 @@ class GerritReviewDataDownloader(object):
                                                                 str(line_str) + sep + \
                                                                 str(start_line_str) + sep + \
                                                                 str(end_line_str) + sep + \
-                                                                one_line.replace("\n", " _ ").replace('\r', '_').replace(sep, '_') + sep + \
-                                                                message_str.replace("\n", " _ ").replace('\r', '_').replace(sep, '_')
+                                                                one_line.replace("\n", "  ").replace('\r', '').replace(sep, '') + sep + \
+                                                                message_str.replace("\n", "  ").replace('\r', '').replace(sep, '')
                                                         out.write(str_to_csv + "\n")
                                                 else: 
                                                     # there is no line specified, then we take the comment for the entire file
@@ -185,8 +185,8 @@ class GerritReviewDataDownloader(object):
                                                             str(line_str) + sep + \
                                                             str(start_line_str) + sep + \
                                                             str(end_line_str) + sep + \
-                                                            one_line.replace("\n", " _ ").replace('\r', '_').replace(sep, '_') + sep + \
-                                                            message_str.replace("\n", " _ ").replace('\r', '_').replace(sep, '_')
+                                                            one_line.replace("\n", "  ").replace('\r', ' ').replace(sep, ' ') + sep + \
+                                                            message_str.replace("\n", "   ").replace('\r', ' ').replace(sep, ' ')
                                                             out.write(str_to_csv + "\n")
 
                                         except:
@@ -323,7 +323,7 @@ class GerritReviewDataDownloader(object):
                                                         # then we need to add an if inside this loop
                                                         for line in lines:
                                                             try:
-                                                                line_contents = line.replace("\n", " _ ").replace('\r', '_').replace(sep, '_')
+                                                                line_contents = line.replace("\n", "   ").replace('\r', ' ').replace(sep, ' ')
                                                                 out.write(f'{change_id}{sep}{date_created_str}{sep}{rev_id}{sep}{file_id}{sep}{line_contents}\n')
                                                             except UnicodeEncodeError:
                                                                 self.logger.info("Encoding problem, skipping one line")  
