@@ -83,10 +83,6 @@ if __name__ == '__main__':
                         help="a path to a BERT model that you want to continue training.).", 
                         type=str, default=None)
 
-    parser.add_argument("--use_adapter",
-                        help="to use the adapter mechanism which reduces the number of parameters when fine-tuning the model later on.", 
-                        action="store_true")
-
     parser.add_argument("--optimizer",
                         help="an optimizer that will be used to train the model (either Lamb or RAdam).", 
                         type=str, default="RAdam")
@@ -122,7 +118,6 @@ if __name__ == '__main__':
     batch_size = args['batch_size']
     epochs = args['epochs']
     model_save_path = args['model_save_path']
-    use_adapter = args['use_adapter']
     model_path = args['model_path']
     optimizer = args['optimizer']
     if optimizer not in ['Lamb', "RAdam"]:
@@ -165,20 +160,9 @@ if __name__ == '__main__':
             dropout_rate=0.1,
             attention_activation=None,
             training=True,
-            trainable=True,
-            use_adapter=use_adapter, 
+            trainable=True
         )
         model.name="BERT4Code"
-
-        # set adapter non-trainable:
-        if use_adapter:
-            for layer in model.layers:
-                if "Adapter" in layer.name:
-                    new_weights = []
-                    for weights in layer.get_weights():
-                        new_weights.append(np.ones(weights.shape))
-                    layer.set_weights(new_weights)
-                    layer.trainable = False
 
         if optimizer == "RAdam":
             compile_model(model)
