@@ -7,6 +7,7 @@ import logging
 import os
 from pathlib import Path
 import pandas as pd
+import glob
 
 logger = logging.getLogger(f'acora.{__file__}')
 logger.setLevel(logging.DEBUG)
@@ -35,6 +36,10 @@ if __name__ == '__main__':
 
     parser.add_argument("--sep", help="a seprator used to separate columns in a csv file.",
                         default=";", type=str)
+    
+    parser.add_argument("--limit_files",
+                        help="if set limits the number of files to the given number.", 
+                        type=int, default=None)
 
     args = vars(parser.parse_args())
     logger.info(f"Run parameters: {str(args)}")
@@ -45,6 +50,7 @@ if __name__ == '__main__':
     output_lines_path = args['output_lines_path']
     file_extensions = args['file_extensions']
     sep = args['sep']
+    limit_files = args['limit_files']
     
     ######
 
@@ -59,12 +65,14 @@ if __name__ == '__main__':
 
     src_code_paths = []
     for ext in file_extensions:
-        src_code_paths.extend([str(x) for x in Path(code_path).glob(f"**/*{ext}")])
+        src_code_paths.extend([str(x) for x in glob.glob(os.path.join(code_path,"**", f"*{ext}"), recursive=True)])
     logger.info(f"Found {len(src_code_paths)} files to be processed.")
 
     logger.info(f"Starting extracting lines...")
     filenames = []
     lines = []
+    if limit_files is not None:
+        src_code_paths = src_code_paths[:limit_files]
     for code_file_path in src_code_paths:
         logger.info(f"Extracting lines from {code_file_path}")
         rel_path = os.path.relpath(code_file_path, code_path)
