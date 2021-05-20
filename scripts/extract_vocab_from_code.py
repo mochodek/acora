@@ -31,6 +31,10 @@ if __name__ == '__main__':
                         help="a path to a .json file with the extracted lines.", 
                         type=str, default=".lines.json")
 
+    parser.add_argument("--use_signatures",
+                        help="whether to add signature tokens.", 
+                        action='store_true')
+
     parser.add_argument("--vocab_path",
                         help="a path to the output vocabulary txt file.", 
                         type=str, default="./vocab.txt")
@@ -43,6 +47,7 @@ if __name__ == '__main__':
 
     code_lines_path = args['code_lines_path']
     vocab_path = args['vocab_path']
+    use_signatures = args['use_signatures']
     
     ######
 
@@ -67,6 +72,17 @@ if __name__ == '__main__':
     logger.info("Creating BERT vocabulary...")
 
     token_dict = OrderedDict(get_base_dict())
+
+    if use_signatures:
+        symbols = ["Aa0", "Aa_", "Aa", "a0", "0a", "a_", "_a", "0a_", "_a0", "_0a", "_a0a", "0A", "A0", "A_", "_A", "_A0", "_0A", "0_"]
+
+        for token in symbols:
+            if token not in token_dict:
+                token_dict[token] = len(token_dict)
+                
+            if "##"+token not in token_dict:
+                token_dict["##"+token] = len(token_dict)
+
     chars = [f'##{x}' for x in '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_']
     chars += [f'{x}' for x in '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_']
 

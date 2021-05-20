@@ -16,6 +16,7 @@ POOL_AVE = 'POOL_AVE'
 
 def extract_embeddings_generator(model,
                                  texts,
+                                 tokenizer_class,
                                  poolings=None,
                                  vocabs=None,
                                  cased=True,
@@ -41,7 +42,7 @@ def extract_embeddings_generator(model,
     """
 
     seq_len = K.int_shape(model.outputs[0])[1]
-    tokenizer = CodeTokenizer(vocabs, cased=cased)
+    tokenizer = tokenizer_class(vocabs, cased=cased)
 
     def _batch_generator():
         tokens, segments = [], []
@@ -101,6 +102,7 @@ def extract_embeddings_generator(model,
 
 def extract_embeddings(model,
                        texts,
+                       tokenizer_class,
                        poolings=None,
                        vocabs=None,
                        cased=True,
@@ -125,14 +127,14 @@ def extract_embeddings(model,
     return: A list of numpy arrays representing the embeddings.
     """
     return [embedding for embedding in extract_embeddings_generator(
-        model, texts, poolings, vocabs, cased, batch_size, cut_embed, output_layer_num
+        model, texts, tokenizer_class, poolings, vocabs, cased, batch_size, cut_embed, output_layer_num
     )]
 
 
 class CodeLinesBERTEmbeddingsExtractor():
     """Allows extracting line embeddings using a BERT model trained on code"""
 
-    def __init__(self, base_model, no_layers, token_dict):
+    def __init__(self, base_model, no_layers, token_dict, tokenizer_class=CodeTokenizer):
         output_layer_num = [-i for i in range(1, no_layers + 1)]
 
         inputs = base_model.inputs[:2]
@@ -156,6 +158,8 @@ class CodeLinesBERTEmbeddingsExtractor():
 
         self.token_dict = token_dict
 
+        self.tokenizer_class = tokenizer_class
+
 
 
     def extract_embeddings(self, lines):
@@ -169,6 +173,7 @@ class CodeLinesBERTEmbeddingsExtractor():
         """
         return extract_embeddings(self.model, 
                                 lines, 
+                                self.tokenizer_class,
                                 batch_size=1,
                                 poolings=[POOL_NSP, POOL_AVE],
                                 vocabs=self.token_dict)

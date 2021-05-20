@@ -1,4 +1,5 @@
 import re
+import string
 import logging
 
 import pandas as pd
@@ -23,6 +24,53 @@ ch.setLevel(logging.DEBUG)
 logger.addHandler(ch)
 
 default_code_stop_delim = r"([\s\t\(\)\[\]{}!@#$%^&*\/\+\-=;:\\\\|`'\"~,.<>/?\n'])"
+
+def token_signature(t):
+    trans_upper = str.maketrans(string.ascii_letters+string.digits,
+                                'a'*len(string.ascii_uppercase)+'A'*len(string.ascii_uppercase)+'0'*len(string.digits))
+    res = t.translate(trans_upper)
+    res = re.sub(r'(.)\1{1,}', r'\1', res)
+    a = "a" in res
+    A = "A" in res
+    zero = "0" in res
+    underscore = "_" in res
+
+    if a and A:
+        if zero:
+            res = re.sub(r'(Aa0)\1{1,}', r'\1', res)
+        if underscore:
+            res = re.sub(r'(Aa_)\1{1,}', r'\1', res)
+        res = re.sub(r'(Aa)\1{1,}', r'\1', res)
+
+    if a:
+        if zero:
+            res = re.sub(r'(a0)\1{1,}', r'\1', res)
+            res = re.sub(r'(0a)\1{1,}', r'\1', res)
+        if underscore:
+            res = re.sub(r'(a_)\1{1,}', r'\1', res)
+            res = re.sub(r'(_a)\1{1,}', r'\1', res)
+            if zero:
+                res = re.sub(r'(0a_)\1{1,}', r'\1', res)
+                res = re.sub(r'(_a0)\1{1,}', r'\1', res)
+                res = re.sub(r'(_0a)\1{1,}', r'\1', res)
+                res = re.sub(r'(_a0a)\1{1,}', r'\1', res)
+
+    if A:
+        if zero:
+            res = re.sub(r'(0A)\1{1,}', r'\1', res)
+            res = re.sub(r'(A0)\1{1,}', r'\1', res)
+        if underscore:
+            res = re.sub(r'(A_)\1{1,}', r'\1', res)
+            res = re.sub(r'(_A)\1{1,}', r'\1', res)
+            if zero:
+                res = re.sub(r'(_A0)\1{1,}', r'\1', res)
+                res = re.sub(r'(_0A)\1{1,}', r'\1', res)
+
+    if zero:
+        res = re.sub(r'(0_)\1{1,}', r'\1', res)
+
+
+    return res
 
 class CodeTokenizer(Tokenizer):
 
@@ -76,6 +124,60 @@ class CodeTokenizer(Tokenizer):
             tokens += self._word_piece_tokenize(word)
         return tokens
 
+class SignatureCodeTokenizer(Tokenizer):
+
+    def __init__(self,
+                 token_dict,
+                 token_cls=TOKEN_CLS,
+                 token_sep=TOKEN_SEP,
+                 token_unk=TOKEN_UNK,
+                 pad_index=0,
+                 cased=False,
+                 code_stop_delim=default_code_stop_delim):
+        """Initialize tokenizer.
+        :param token_dict: A dict maps tokens to indices.
+        :param token_cls: The token represents classification.
+        :param token_sep: The token represents separator.
+        :param token_unk: The token represents unknown token.
+        :param pad_index: The index to pad.
+        :param cased: Whether to keep the case.
+        """
+        
+        super(SignatureCodeTokenizer, self).__init__(token_dict, 
+                                            token_cls,
+                                            token_sep,
+                                            token_unk,
+                                            pad_index,
+                                            cased)
+        self._code_stop_delim = code_stop_delim
+        
+        
+    def tokenize_training(self, first, second=None):
+        """Split text to tokens for BERT pre-training.
+        :param first: First text.
+        :param second: Second text.
+        :return: A list of strings.
+        """
+        first_tokens = self._tokenize(first)
+        second_tokens = self._tokenize(second) if second is not None else None
+        return first_tokens, second_tokens
+
+    def _tokenize(self, text):
+        """Split text to tokens.
+        :param first: First text.
+        :param second: Second text.
+        :return: A list of strings.
+        """
+        split_loc = re.split(self._code_stop_delim, text)
+        split_loc = list(filter(lambda a: a != '', split_loc))
+        split_loc = ["0" if x.isdigit() else x for x in split_loc]
+        
+        split_loc = [x if x in self._token_dict else token_signature(x)  for x in split_loc]
+        
+        tokens = []
+        for word in split_loc:
+            tokens += self._word_piece_tokenize(word)
+        return tokens
 
 def generate_code_pairs(file_lines, tokenizer, line_repeat_period=64, logger = None):
     """ Generates pairs of subsequent lines of code that can be used for BERT training."""

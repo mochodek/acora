@@ -13,7 +13,7 @@ import json
 import numpy as np
 
 from acora.vocab import BERTVocab
-from acora.code import CodeTokenizer, generate_code_pairs
+from acora.code import CodeTokenizer, SignatureCodeTokenizer, generate_code_pairs
 
 logger = logging.getLogger(f'acora.{__file__}')
 logger.setLevel(logging.DEBUG)
@@ -53,6 +53,10 @@ if __name__ == '__main__':
                         help="a number of lines per each a given line can be repeated.", 
                         type=int, default=64)
 
+    parser.add_argument("--tokenizer",
+                        help="a code tokenizer to be used (either CodeTokenizer or SignatureCodeTokenizer).", 
+                        type=str, default="CodeTokenizer")
+
 
 
     args = vars(parser.parse_args())
@@ -66,6 +70,12 @@ if __name__ == '__main__':
     output_dir_path = args['output_dir_path']
     line_pairs_per_file = args['line_pairs_per_file']
     line_repeat_period = args['line_repeat_period']
+    tokenizer = args['tokenizer']
+
+
+    if tokenizer not in ['CodeTokenizer', "SignatureCodeTokenizer"]:
+        logger.error(f"{tokenizer} is not a supported tokenizer.")
+        exit(1)
     
     ######
 
@@ -98,7 +108,10 @@ if __name__ == '__main__':
         exit(1) 
 
     logger.info("Initializing a BERT code tokenizer...")
-    tokenizer = CodeTokenizer(vocab.token_dict, cased=True)
+    if tokenizer == 'CodeTokenizer':
+        tokenizer = CodeTokenizer(vocab.token_dict, cased=True)
+    else:
+        tokenizer = SignatureCodeTokenizer(vocab.token_dict, cased=True)
     logger.info(f"BERT code tokenizer ready, example: 'bool acoraIs_nice = True;' -> {str(tokenizer.tokenize('bool acoraIs_nice = True;'))}")
 
     logger.info("Generating code-line pairs...")
