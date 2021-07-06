@@ -1,9 +1,19 @@
 import numpy as np
+import os
+import tensorflow as tf
 
-import keras
-from keras import backend as K
+if tf.__version__.startswith("1."):
+    os.environ['TF_KERAS'] = '0'
+    import keras
+    from keras import backend as K
+else:
+    os.environ['TF_KERAS'] = '1'
+    import tensorflow.compat.v1.keras as keras
+    from tensorflow.compat.v1.keras import backend as K
+
+
 from keras_bert import (get_model, compile_model, get_base_dict, gen_batch_inputs, get_token_embedding,
-                        get_custom_objects, set_custom_objects)
+                        get_custom_objects)
 from keras_bert.layers import Extract, MaskedGlobalMaxPool1D
 
 from acora.code import CodeTokenizer

@@ -19,28 +19,33 @@ import warnings
 with warnings.catch_warnings():  
     warnings.filterwarnings("ignore",category=FutureWarning)
 
-    import keras
-    from keras.models import load_model
+    import tensorflow as tf
+
+    if tf.__version__.startswith("1."):
+        os.environ['TF_KERAS'] = '0'
+        from tensorflow import ConfigProto, Session, set_random_seed
+        import keras
+        from keras.models import load_model
+    else:
+        os.environ['TF_KERAS'] = '1'
+        from tensorflow.compat.v1 import ConfigProto, Session, set_random_seed
+        import tensorflow.compat.v1.keras as keras
+        from tensorflow.compat.v1.keras.models import load_model
+         
+    from tensorflow.python.client import device_lib
+
 
     from keras_bert import get_custom_objects
 
     from keras_radam import RAdam
 
-    import tensorflow as tf
-
-    if tf.__version__.startswith("1."):
-        from tensorflow import ConfigProto, Session, set_random_seed
-    else:
-        from tensorflow.compat.v1 import ConfigProto, Session, set_random_seed
-         
-    from tensorflow.python.client import device_lib
 
 from acora.vocab import BERTVocab
 from acora.comments import default_subject_columns, \
     load_comments_files, default_purpose_labels
 from acora.vocab import BERTVocab
 from acora.code import CodeTokenizer, load_code_files
-from acora.lamb import Lamb
+
 from acora.code_similarities import SimilarLinesFinder
 from acora.recommend import CodeReviewFocusRecommender
 from acora.code_embeddings import CodeLinesBERTEmbeddingsExtractor
@@ -202,7 +207,6 @@ if __name__ == '__main__':
     logger.info(f"Loading the trained BERT model from {bert_trained_path}...")
     custom_objects = get_custom_objects()
     custom_objects['RAdam'] = RAdam
-    custom_objects['Lamb'] = Lamb
     model = keras.models.load_model(bert_trained_path, 
                                     custom_objects=custom_objects)
 

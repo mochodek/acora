@@ -15,25 +15,29 @@ from scipy import stats
 
 from collections import Counter
 
+
 import warnings  
 with warnings.catch_warnings():  
     warnings.filterwarnings("ignore",category=FutureWarning)
 
-    import keras
-    from keras.models import load_model
+    import tensorflow as tf
+
+    if tf.__version__.startswith("1."):
+        os.environ['TF_KERAS'] = '0'
+        from tensorflow import ConfigProto, Session, set_random_seed
+        import keras
+    else:
+        os.environ['TF_KERAS'] = '1'
+        from tensorflow.compat.v1 import ConfigProto, Session, set_random_seed
+        import tensorflow.compat.v1.keras as keras
+         
+    from tensorflow.python.client import device_lib
+
 
     from keras_bert import Tokenizer, get_custom_objects
 
     from keras_radam import RAdam
 
-    import tensorflow as tf
-   
-    if tf.__version__.startswith("1."):
-            from tensorflow import ConfigProto, Session, set_random_seed
-    else:
-        from tensorflow.compat.v1 import ConfigProto, Session, set_random_seed
-
-    from tensorflow.python.client import device_lib
 
 
 from acora.vocab import BERTVocab

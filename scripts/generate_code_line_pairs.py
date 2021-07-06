@@ -12,6 +12,17 @@ import json
 
 import numpy as np
 
+import warnings  
+with warnings.catch_warnings():  
+    warnings.filterwarnings("ignore",category=FutureWarning)
+
+    import tensorflow as tf
+
+    if tf.__version__.startswith("1."):
+        os.environ['TF_KERAS'] = '0'
+    else:
+        os.environ['TF_KERAS'] = '1'
+
 from acora.vocab import BERTVocab
 from acora.code import CodeTokenizer, SignatureCodeTokenizer, generate_code_pairs
 

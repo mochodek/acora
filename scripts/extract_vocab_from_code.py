@@ -9,6 +9,19 @@ import json
 from pathlib import Path
 from collections import Counter, OrderedDict
 
+
+import warnings  
+with warnings.catch_warnings():  
+    warnings.filterwarnings("ignore",category=FutureWarning)
+
+    import tensorflow as tf
+
+    if tf.__version__.startswith("1."):
+        os.environ['TF_KERAS'] = '0'
+    else:
+        os.environ['TF_KERAS'] = '1'
+
+
 from keras_bert import get_base_dict
 
 from acora.vocab import code_vocab_tokenize

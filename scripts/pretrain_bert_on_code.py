@@ -15,6 +15,7 @@ logging.getLogger("tensorflow").setLevel(logging.INFO)
 
 import pandas as pd
 import numpy as np
+import os
 
 from scipy import stats
 
@@ -24,25 +25,30 @@ import warnings
 with warnings.catch_warnings():  
     warnings.filterwarnings("ignore",category=FutureWarning)
 
-    import keras
-    from keras import backend as K
-    from keras.models import load_model
-    from keras_bert import get_model, compile_model, gen_batch_inputs, get_custom_objects
-
-    from keras_radam import RAdam
-
     import tensorflow as tf
 
     if tf.__version__.startswith("1."):
+        os.environ['TF_KERAS'] = '0'
         from tensorflow import ConfigProto, Session, set_random_seed
+        import keras
+        from keras import backend as K
+        from keras.models import load_model
     else:
+        os.environ['TF_KERAS'] = '1'
         from tensorflow.compat.v1 import ConfigProto, Session, set_random_seed
+        import tensorflow.compat.v1.keras as keras
+        from tensorflow.compat.v1.keras import backend
+        from tensorflow.compat.v1.keras import backend as K
+        from tensorflow.compat.v1.keras.models import load_model
+    
+    from keras_bert import get_model, compile_model, gen_batch_inputs, get_custom_objects
 
     from tensorflow.python.client import device_lib
 
+    from keras_radam import RAdam
+
 
 from acora.vocab import BERTVocab
-from acora.lamb import compile_model_lamb, Lamb
 
 logger = logging.getLogger(f'acora.{__file__}')
 logger.setLevel(logging.DEBUG)
@@ -84,7 +90,7 @@ if __name__ == '__main__':
                         type=str, default=None)
 
     parser.add_argument("--optimizer",
-                        help="an optimizer that will be used to train the model (either Lamb or RAdam).", 
+                        help="an optimizer that will be used to train the model (RAdam).", 
                         type=str, default="RAdam")
 
     parser.add_argument("--not_use_gpu", help="to forbid using a GPU if available.",
@@ -120,7 +126,7 @@ if __name__ == '__main__':
     model_save_path = args['model_save_path']
     model_path = args['model_path']
     optimizer = args['optimizer']
-    if optimizer not in ['Lamb', "RAdam"]:
+    if optimizer not in ["RAdam"]:
         logger.error(f"{optimizer} is not a supported optimizer.")
         exit(1)
     
@@ -162,19 +168,17 @@ if __name__ == '__main__':
             training=True,
             trainable=True
         )
-        model.name="BERT4Code"
+        #model.name="BERT4Code"
 
         if optimizer == "RAdam":
             compile_model(model)
-        elif optimizer == "Lamb":
-            compile_model_lamb(model) 
+
         
 
     else:
         logger.info(f"Loading a model to continue training it...")
         custom_objects = get_custom_objects()
         custom_objects['RAdam'] = RAdam
-        custom_objects['Lamb'] = Lamb
         model = keras.models.load_model(model_path, custom_objects=custom_objects)
     
     model.summary(print_fn=logger.info)
