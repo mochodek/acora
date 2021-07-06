@@ -1,6 +1,6 @@
 # ACoRA - Automatic Code-Review Assistant
 
-ACoRA is a prototype toolset employing Machine Learning algorithms to support code reviews in Continous Integration.
+ACoRA is a prototype toolset employing Machine Learning algorithms to support code reviews in Continous Integration. *Still a work in progress project!*
 
 ## Installation
 
