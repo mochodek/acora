@@ -11,6 +11,7 @@ RUN apt-get -yqq update \
         git \
         wget \
         libssl-dev \
+		bzip2 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /root/
@@ -33,6 +34,12 @@ RUN echo ". /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc \
 
 RUN  conda activate acora \
     && python -m ipykernel install --user --name acora --display-name "Python ACORA" 
+	
+RUN conda activate acora \ 
+	&& conda uninstall tensorflow==1.13.1
+	
+RUN conda activate acora \ 
+	&& pip install --upgrade pip setuptools wheel
 
 VOLUME [ "/root/acora", "/root/workspace" ]
 COPY . "/root/acora"

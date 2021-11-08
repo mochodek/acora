@@ -41,7 +41,7 @@ def camel_case_split(identifier):
     matches = re.finditer('.+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)', identifier)
     return [m.group(0) for m in matches]
 
-def code_vocab_tokenize(text, code_stop_delim=default_code_stop_delim):
+def code_vocab_tokenize(text, code_stop_delim=default_code_stop_delim, digit_token=True):
     """Uses a BERT approach to tokenize lines of code (the so-called word-piece tokenization)."""
 
     split_loc = re.split(code_stop_delim, text)
@@ -56,10 +56,12 @@ def code_vocab_tokenize(text, code_stop_delim=default_code_stop_delim):
         elif len(camel_case) > 1:
             tokens.append(camel_case[0])
             tokens.extend([f'##{str(x)}' for x in camel_case[1:]])
-        elif token.isdigit():
+        elif token.isdigit() and not digit_token:
             digits = list(str(token))
             tokens.append(digits[0])
             tokens.extend([f'##{str(x)}' for x in digits[1:]])
+        elif token.isdigit() and digit_token:
+            tokens.append("[NUMBER]")
         else:
             tokens.append(token)
             

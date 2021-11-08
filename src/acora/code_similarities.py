@@ -7,7 +7,7 @@ from sklearn.neighbors import NearestNeighbors
 class SimilarLinesFinder():
     """Allows finding similar lines to the lines given as the reference database."""
 
-    def __init__(self, cut_off_percentile=None, max_similar=None, cut_off_sample=500):
+    def __init__(self, cut_off_percentile=None, max_similar=None, cut_off_sample=500, at_least_one_result=True):
         """
         Parameters:
         -----------
@@ -18,6 +18,7 @@ class SimilarLinesFinder():
                                     If None is given, the cut off is ignored.
         max_similar : int or None, the maximum number of similar lines to be returned.
         cut_off_sample : int, the number of lines to sample while calculating the cut off threshold.
+        at_least_one_result : bool, if set to True it will always return at least one similar line (the most similar one).
         """
         self.cut_off_percentile = cut_off_percentile
         self.max_similar = max_similar
@@ -27,6 +28,7 @@ class SimilarLinesFinder():
         self.logger = logging.getLogger('acora.code_similarities')
         self.dist_cut_off = None
         self.cut_off_sample = cut_off_sample
+        self.at_least_one_result = at_least_one_result
 
     def fit(self, reference_lines, reference_lines_embeddings):
         """Fits a simlarity finder model
@@ -103,7 +105,7 @@ class SimilarLinesFinder():
                                 among the reference lines.
         return : a list of tuples, each tupple consists of a query line, a similar reference line, and the distance measure.
         """
-        if self.dist_cut_off is not None:
+        if not self.at_least_one_result and self.dist_cut_off is not None:
             dist, sims_ids = self.nbrs.radius_neighbors(lines_embeddings, 
                                 radius=self.dist_cut_off,
                                 sort_results=True,
@@ -117,7 +119,16 @@ class SimilarLinesFinder():
             if line not in result:
                 if self.max_similar is not None:
                     sim_ids = sim_ids[:self.max_similar]
-                result[line] = [self.reference_lines[sim_id] for sim_id in sim_ids]
+
+                if not self.at_least_one_result:
+                    result[line] = [self.reference_lines[sim_id] for sim_id in sim_ids]
+                else:
+                    sim_lines = [self.reference_lines[sim_id] for j, sim_id in enumerate(sim_ids) if dist[i][j] <= self.dist_cut_off]
+       
+                    if len(sim_lines) == 0:
+                        sim_lines = [self.reference_lines[sim_ids[0]],]
+                    result[line] = sim_lines
+
         
         return result
 

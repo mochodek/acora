@@ -48,6 +48,22 @@ if __name__ == '__main__':
                         help="whether to add signature tokens.", 
                         action='store_true')
 
+    parser.add_argument("--add_chars",
+                        help="whether to pre-add single chars to the vocab.", 
+                        action='store_true')
+
+    parser.add_argument("--add_num_token",
+                        help="add token for numbers.", 
+                        action='store_true')
+
+    parser.add_argument("--min_count",
+                        help="a threshold for the min. number of token's occureance", 
+                        type=int, default=None)
+
+    parser.add_argument("--min_token_length",
+                        help="a threshold for the min. lenght of a tokens starting with ##", 
+                        type=int, default=None)
+
     parser.add_argument("--vocab_path",
                         help="a path to the output vocabulary txt file.", 
                         type=str, default="./vocab.txt")
@@ -61,6 +77,10 @@ if __name__ == '__main__':
     code_lines_path = args['code_lines_path']
     vocab_path = args['vocab_path']
     use_signatures = args['use_signatures']
+    add_chars = args['add_chars']
+    min_count = args['min_count']
+    min_token_length = args['min_token_length']
+    add_num_token = args['add_num_token']
     
     ######
 
@@ -86,6 +106,10 @@ if __name__ == '__main__':
 
     token_dict = OrderedDict(get_base_dict())
 
+
+    if add_num_token:
+        token_dict["[NUMBER]"] = len(token_dict)
+
     if use_signatures:
         symbols = ["Aa0", "Aa_", "Aa", "a0", "0a", "a_", "_a", "0a_", "_a0", "_0a", "_a0a", "0A", "A0", "A_", "_A", "_A0", "_0A", "0_"]
 
@@ -96,18 +120,27 @@ if __name__ == '__main__':
             if "##"+token not in token_dict:
                 token_dict["##"+token] = len(token_dict)
 
-    chars = [f'##{x}' for x in '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_']
-    chars += [f'{x}' for x in '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_']
+    if add_chars:
+        chars = [f'##{x}' for x in '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_']
+        chars += [f'{x}' for x in '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_']
 
-    for token in chars:
-        if token not in token_dict:
-            token_dict[token] = len(token_dict)
+        for token in chars:
+            if token not in token_dict:
+                token_dict[token] = len(token_dict)
 
     count_tokens = Counter(tokens)
     most_common_tokens = len(count_tokens) # currently we take all of them
     for token in [x[0] for x in count_tokens.most_common(most_common_tokens)]:
         if token not in token_dict:
             token_dict[token] = len(token_dict)
+
+    if min_count:
+        for key in [k for k in token_dict.keys() if token_dict[k] < min_count and k not in ["", "[UNK]", "[CLS]", "[SEP]", "[MASK]"]]:
+            token_dict.pop(key)
+
+    if min_token_length:
+        for key in [k for k in token_dict.keys() if k.startswith("##") and len(k) < (min_token_length+2)]:
+            token_dict.pop(key)
 
     logger.info(f"Created a vocabulary with {len(token_dict):,} entries.")
 

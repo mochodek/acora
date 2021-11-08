@@ -86,7 +86,7 @@ def index():
             else:
                 tf.compat.v1.keras.backend.set_session(sess)                                
             review_results = recommender.review(lines)
-
+    print(review_results)
     return render_template('index.html', review_results=review_results)
 
 
@@ -232,36 +232,40 @@ if __name__ == '__main__':
     sess = Session(config=config) 
     if tf.__version__.startswith("1."):
         keras.backend.set_session(sess)
+        graph = tf.get_default_graph()
     else:
         tf.compat.v1.keras.backend.set_session(sess)
-    graph = tf.get_default_graph()
+        graph = tf.compat.v1.get_default_graph()
+   
+    with graph.as_default():
+        custom_objects = get_custom_objects()
+        custom_objects['RAdam'] = RAdam
+        
+        logger.info(f"Loading a pre-trained BERT model from {bert_pretrained_path}...")
+        recommender = None
 
-    custom_objects = get_custom_objects()
-    custom_objects['RAdam'] = RAdam
-    
-    logger.info(f"Loading a pre-trained BERT model from {bert_pretrained_path}...")
-    pre_model = keras.models.load_model(bert_pretrained_path, 
-                                    custom_objects=custom_objects)
+        pre_model = keras.models.load_model(bert_pretrained_path, 
+                                            custom_objects=custom_objects)
 
-    embeddings_extractor = CodeLinesBERTEmbeddingsExtractor(base_model=pre_model, 
-                                                            no_layers=no_layers,
-                                                            token_dict=vocab.token_dict)
+        embeddings_extractor = CodeLinesBERTEmbeddingsExtractor(base_model=pre_model, 
+                                                                no_layers=no_layers,
+                                                                token_dict=vocab.token_dict)
 
-    logger.info(f"Loading the trained BERT model from {bert_trained_path}...")
-    model = keras.models.load_model(bert_trained_path, 
-                                    custom_objects=custom_objects)
-    
-    recommender = CodeReviewFocusRecommender(classifier=model, 
-                        code_tokenizer = tokenizer, 
-                        seq_len = seq_len, 
-                        embeddings_extractor = embeddings_extractor,
-                        similarity_finder = finder,
-                        review_comments_df = reviews_all_df,
-                        line_column = line_column,
-                        purpose_column = purpose_column,
-                        subject_columns = subject_columns,
-                        message_column = message_column,
-                        classify_threshold=0.5)
+        logger.info(f"Loading the trained BERT model from {bert_trained_path}...")    
+        model = keras.models.load_model(bert_trained_path, 
+                                            custom_objects=custom_objects)
+        
+        recommender = CodeReviewFocusRecommender(classifier=model, 
+                            code_tokenizer = tokenizer, 
+                            seq_len = seq_len, 
+                            embeddings_extractor = embeddings_extractor,
+                            similarity_finder = finder,
+                            review_comments_df = reviews_all_df,
+                            line_column = line_column,
+                            purpose_column = purpose_column,
+                            subject_columns = subject_columns,
+                            message_column = message_column,
+                            classify_threshold=0.5)
 
     app.config['TEMPLATES_AUTO_RELOAD'] = True
     app.run(host=host, port=port)

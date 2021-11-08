@@ -81,7 +81,8 @@ class CodeTokenizer(Tokenizer):
                  token_unk=TOKEN_UNK,
                  pad_index=0,
                  cased=False,
-                 code_stop_delim=default_code_stop_delim):
+                 code_stop_delim=default_code_stop_delim,
+                 use_digit_token=True):
         """Initialize tokenizer.
         :param token_dict: A dict maps tokens to indices.
         :param token_cls: The token represents classification.
@@ -98,6 +99,7 @@ class CodeTokenizer(Tokenizer):
                                             pad_index,
                                             cased)
         self._code_stop_delim = code_stop_delim
+        self.use_digit_token = use_digit_token
         
         
     def tokenize_training(self, first, second=None):
@@ -109,6 +111,7 @@ class CodeTokenizer(Tokenizer):
         first_tokens = self._tokenize(first)
         second_tokens = self._tokenize(second) if second is not None else None
         return first_tokens, second_tokens
+        
 
     def _tokenize(self, text):
         """Split text to tokens.
@@ -121,7 +124,10 @@ class CodeTokenizer(Tokenizer):
         
         tokens = []
         for word in split_loc:
-            tokens += self._word_piece_tokenize(word)
+            if self.use_digit_token and str(word).isdigit():
+                tokens.append("[NUMBER]")
+            else:
+                tokens += self._word_piece_tokenize(word)
         return tokens
 
 class SignatureCodeTokenizer(Tokenizer):

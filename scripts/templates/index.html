@@ -40,18 +40,18 @@
                 <pre><code>{{line_result[0]}}</code></pre>
             </div>
             <div class="col-sm-2">
-                {% if 'change_request' in line_result[2]['purpose'] %}
+                {% if 'change_request' in line_result[2].get('purpose', []) %}
                     <span class="badge badge-danger">change_request {{'{0:0.1f}'.format(line_result[2]['purpose']['change_request']*100)}}%</span>
                 {% endif %}
-                {% if 'discussion_trigger' in line_result[2]['purpose'] %}
+                {% if 'discussion_trigger' in line_result[2].get('purpose', []) %}
                     <span class="badge badge-warning">discussion_trigger {{'{0:0.1f}'.format(line_result[2]['purpose']['discussion_trigger']*100)}}%</span>
                 {% endif %}
-                {% if 'discussion_participation' in line_result[2]['purpose'] %}
+                {% if 'discussion_participation' in line_result[2].get('purpose', []) %}
                     <span class="badge badge-warning">discussion_participation {{'{0:0.1f}'.format(line_result[2]['purpose']['discussion_participation']*100)}}%</span>
                 {% endif %}
             </div>
             <div class="col-sm-4">
-                {% for subject in line_result[2]['subject'] %}
+                {% for subject in line_result[2].get('subject', []) %}
                     {% if line_result[2]['subject'][subject] > 0 %}
                         <span class="badge badge-success">{{subject}} {{'{0:0.1f}'.format(line_result[2]['subject'][subject]*100)}}%</span>
                     {% endif %}

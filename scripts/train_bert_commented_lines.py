@@ -75,8 +75,8 @@ if __name__ == '__main__':
                         help="a path to a BERT config .json file (the same format is used as in the original BERT.).", 
                         type=str, default="./bert_config.json")
 
-    parser.add_argument("--use_adapter",
-                        help="to use the adapter mechanism which reduces the number of parameters when fine-tuning the model later on.", 
+    parser.add_argument("--continue_training",
+                        help="if set the bert_pretrained has to be already the commented line classifier trained with this script", 
                         action="store_true")
 
     parser.add_argument("--vocab_path",
@@ -141,7 +141,7 @@ if __name__ == '__main__':
 
     bert_pretrained_path = args['bert_pretrained_path']
     bert_config_path = args['bert_config_path']
-    use_adapter = args['use_adapter']
+    continue_training = args['continue_training']
     training_data_paths = args['training_data_paths']
     vocab_path = args['vocab_path']
     vocab_size = args['vocab_size']
@@ -211,30 +211,19 @@ if __name__ == '__main__':
     model = keras.models.load_model(bert_pretrained_path, 
                                     custom_objects=custom_objects)
 
-    if use_adapter:        
-        trainable = ['Encoder-{}-MultiHeadSelfAttention-Adapter'.format(i + 1) for i in range(layer_num)] +\
-            ['Encoder-{}-FeedForward-Adapter'.format(i + 1) for i in range(layer_num)] +\
-            ['Encoder-{}-MultiHeadSelfAttention-Norm'.format(i + 1) for i in range(layer_num)] +\
-            ['Encoder-{}-FeedForward-Norm'.format(i + 1) for i in range(layer_num)]
-    
-        for layer in model.layers:
-            if layer.name in trainable:
-                layer.trainable = True
-            else:
-                layer.trainable = False
-        
-    inputs = model.inputs[:2]
-    dense = model.get_layer(f'Encoder-{layer_num}-FeedForward-Norm').output
-    dense = Extract(index=0, name="Extract")(dense)
-    outputs = [keras.layers.Dense(units=1, activation='sigmoid', name="Output-Commented")(dense)]
+    if not continue_training:
+        inputs = model.inputs[:2]
+        dense = model.get_layer(f'Encoder-{layer_num}-FeedForward-Norm').output
+        dense = Extract(index=0, name="Extract")(dense)
+        outputs = [keras.layers.Dense(units=1, activation='sigmoid', name="Output-Commented")(dense)]
 
-    model = keras.models.Model(inputs, outputs)
+        model = keras.models.Model(inputs, outputs)
 
-    model.compile(
-        RAdam(learning_rate =lr),
-        loss="binary_crossentropy",
-        metrics=['accuracy'],
-    )
+        model.compile(
+            RAdam(learning_rate =lr),
+            loss="binary_crossentropy",
+            metrics=['accuracy'],
+        )
 
     model.summary(print_fn=logger.info)
 

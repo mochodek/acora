@@ -123,7 +123,7 @@ if __name__ == '__main__':
         tokenizer = CodeTokenizer(vocab.token_dict, cased=True)
     else:
         tokenizer = SignatureCodeTokenizer(vocab.token_dict, cased=True)
-    logger.info(f"BERT code tokenizer ready, example: 'bool acoraIs_nice = True;' -> {str(tokenizer.tokenize('bool acoraIs_nice = True;'))}")
+    logger.info(f"BERT code tokenizer ready, example: 'int acoraIs_nice = 1;' -> {str(tokenizer.tokenize('int acoraIs_nice = 1;'))}")
 
     logger.info("Generating code-line pairs...")
     code_line_pairs = generate_code_pairs(file_lines, tokenizer, line_repeat_period, logger)
