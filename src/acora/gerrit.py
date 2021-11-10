@@ -188,12 +188,20 @@ class GerritReviewDataDownloader(object):
                                                             one_line.replace("\n", "  ").replace('\r', ' ').replace(sep, ' ') + sep + \
                                                             message_str.replace("\n", "   ").replace('\r', ' ').replace(sep, ' ')
                                                             out.write(str_to_csv + "\n")
-
+                                        except 	KeyboardInterrupt:  
+                                            # if we press Ctrl+C then we should stop the script
+                                            self.logger.info('Stopped from the keyboard')
+                                            fails = max_fails
+                                            break
                                         except:
                                             # this is a brutal exception handling, but we cannot check for all problems
                                             self.logger.info('Unhandled exception, moving on')
                                             self.logger.error(traceback.format_exc())
                                             self.logger.error(one_comment)
+                            except KeyboardInterrupt:
+                                self.logger.info('Stopped from Keyboard 2')
+                                fails = max_fails
+                                break
                             except:
                                 self.logger.info('Unhandled exception, moving on')
                                 self.logger.error(traceback.format_exc())
@@ -201,6 +209,10 @@ class GerritReviewDataDownloader(object):
                 
                     if has_more:
                         start += n
+                except KeyboardInterrupt:
+                    self.logger.info("Stopped from keyboard #3")
+                    fails = max_fails
+                    break
                 except:
                     fails += 1
                     self.logger.error(traceback.format_exc())
@@ -327,13 +339,29 @@ class GerritReviewDataDownloader(object):
                                                                 out.write(f'{change_id}{sep}{date_created_str}{sep}{rev_id}{sep}{file_id}{sep}{line_contents}\n')
                                                             except UnicodeEncodeError:
                                                                 self.logger.info("Encoding problem, skipping one line")  
+                                        except KeyboardInterrupt:  
+                                            # if we press Ctrl+C then we should stop the script
+                                            self.logger.info('Stopped from the keyboard')
+                                            fails = max_fails
+                                            break
+
                                         except:
                                             self.logger.debug(f"Failed to query: {diff_query}")  
+                            except 	KeyboardInterrupt:  
+                                # if we press Ctrl+C then we should stop the script
+                                self.logger.info('Stopped from the keyboard')
+                                fails = max_fails
+                                break
                             except:
                                 self.logger.debug(f"Failed to query: {files_query}")                            
             
                     if has_more:
                         start += n
+                except 	KeyboardInterrupt:  
+                    # if we press Ctrl+C then we should stop the script
+                    self.logger.info('Stopped from the keyboard')
+                    fails = max_fails
+                    break
                 except:
                     fails += 1
                     self.logger.error(traceback.format_exc())
