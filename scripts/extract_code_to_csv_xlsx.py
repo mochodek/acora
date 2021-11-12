@@ -78,7 +78,7 @@ if __name__ == '__main__':
         rel_path = os.path.relpath(code_file_path, code_path)
         with open(code_file_path, "r", encoding='utf-8', errors="ignore") as f:
             new_lines = f.readlines()
-            lines.extend(new_lines)
+            lines.extend([line.replace("\n", "") for line in new_lines])
             filenames.extend([rel_path]*len(new_lines))
         logger.info(f"Extracted {len(new_lines)} lines from {code_file_path}")
 
