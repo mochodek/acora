@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(name='acora',
-      version='0.1',
+      version='0.2',
       description='Automatic Code-Review Assistant (ACoRA)',
       url='https://github.com/mochodek/acora.git',
       long_description=long_description,
@@ -29,7 +29,7 @@ setup(name='acora',
           'keras-rectified-adam==0.18.0',
           'matplotlib>=2.2.3',
           'seaborn>=0.10.0',
-          'pygit2==1.1.1',
+          'pygit2>=1.1.1',
           'xlrd == 1.2.0',
           'openpyxl==3.0.3',
           'flask==1.1.2',

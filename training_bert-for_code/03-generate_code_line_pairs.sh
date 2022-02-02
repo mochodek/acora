@@ -1,0 +1,1 @@
+python $ACORA_HOME/scripts/generate_code_line_pairs.py --code_lines_path "./cloudera-lines.json" --vocab_path "../data/cloudera_vocab.txt" --vocab_size 10000 --output_dir_path "./line_pairs" --line_pairs_per_file 1000

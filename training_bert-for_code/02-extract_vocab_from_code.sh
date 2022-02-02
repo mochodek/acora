@@ -1,0 +1,1 @@
+python $ACORA_HOME/scripts/extract_vocab_from_code.py --code_lines_path "./cloudera-lines.json" --vocab_path "../data/cloudera_vocab.txt" --min_count 5 --min_token_length 2 --add_num_token

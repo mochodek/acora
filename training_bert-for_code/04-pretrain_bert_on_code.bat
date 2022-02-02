@@ -1,0 +1,1 @@
+python C:/Users/miros/Documents/Code/openAI/acora/scripts/pretrain_bert_on_code.py  --line_pairs_dir_path "./line_pairs" --vocab_path "./cloudera_vocab.txt" --vocab_size 10000 --bert_config_path "./bert4code_config.json" --seq_len 128 --batch_size 32 --epochs 5 --model_save_path "../cloudera_bert4code_c.h5"
