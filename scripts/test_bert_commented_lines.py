@@ -91,6 +91,10 @@ if __name__ == '__main__':
     parser.add_argument("--lines_commented_cm_test_path", help="a path to a file presenting a confusion matrix for the test.",
                         type=str, default="./lines_commented_test.pdf")
     
+    parser.add_argument("--preserve_whitespace",
+                        help="whether or not to preserve whitespaces as tokens).", 
+                        action='store_true')
+    
 
     args = vars(parser.parse_args())
     logger.info(f"Run parameters: {str(args)}")
@@ -107,6 +111,7 @@ if __name__ == '__main__':
     not_use_gpu = args['not_use_gpu']
     decision_column = args['decision_column']
     lines_commented_cm_test_path = args['lines_commented_cm_test_path']
+    preserve_whitespace = args['preserve_whitespace']
     
     ######
     
@@ -123,7 +128,7 @@ if __name__ == '__main__':
     logger.info(f"Loaded {vocab.size:,} vocab entries.")
 
     logger.info("Initializing a BERT code tokenizer...")
-    tokenizer = CodeTokenizer(vocab.token_dict, cased=True)
+    tokenizer = CodeTokenizer(vocab.token_dict, cased=True, preserve_whitespace=preserve_whitespace)
     logger.info(f"BERT code tokenizer ready, example: 'bool acoraIs_nice = True;' -> {str(tokenizer.tokenize('bool acoraIs_nice = True;'))}")
 
     logger.info("Loading test lines data...")
