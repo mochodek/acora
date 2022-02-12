@@ -82,7 +82,8 @@ class CodeTokenizer(Tokenizer):
                  pad_index=0,
                  cased=False,
                  code_stop_delim=default_code_stop_delim,
-                 use_digit_token=True):
+                 use_digit_token=True,
+                 preserve_whitespace=True):
         """Initialize tokenizer.
         :param token_dict: A dict maps tokens to indices.
         :param token_cls: The token represents classification.
@@ -100,6 +101,7 @@ class CodeTokenizer(Tokenizer):
                                             cased)
         self._code_stop_delim = code_stop_delim
         self.use_digit_token = use_digit_token
+        self.preserve_whitespace = preserve_whitespace
         
         
     def tokenize_training(self, first, second=None):
@@ -121,6 +123,8 @@ class CodeTokenizer(Tokenizer):
         """
         split_loc = re.split(self._code_stop_delim, text)
         split_loc = list(filter(lambda a: a != '', split_loc))
+        if not self.preserve_whitespace:
+            split_loc = list(filter(lambda a: a not in (" ", "\t"), split_loc))
         
         tokens = []
         for word in split_loc:
