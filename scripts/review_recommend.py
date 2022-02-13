@@ -137,8 +137,8 @@ if __name__ == '__main__':
     parser.add_argument("--no_layers", help="the number of layers to include while extracting embeddings.",
                         default=4, type=int)
 
-    parser.add_argument("--preserve_whitespace",
-                        help="whether or not to preserve whitespaces as tokens).", 
+    parser.add_argument("--omit_whitespace",
+                        help="whether or not to omit whitespaces as tokens).", 
                         action='store_true')
     
     args = vars(parser.parse_args())
@@ -164,7 +164,7 @@ if __name__ == '__main__':
     vocab_size = args['vocab_size']
     not_use_gpu = args['not_use_gpu']
     no_layers = args['no_layers']
-    preserve_whitespace = args['preserve_whitespace']
+    omit_whitespace = args['omit_whitespace']
     
     ######
 
@@ -206,7 +206,7 @@ if __name__ == '__main__':
     logger.info(f"Loaded {vocab.size:,} vocab entries.")
 
     logger.info("Initializing a BERT code tokenizer...")
-    tokenizer = CodeTokenizer(vocab.token_dict, cased=True, preserve_whitespace=preserve_whitespace)
+    tokenizer = CodeTokenizer(vocab.token_dict, cased=True, preserve_whitespace=not omit_whitespace)
     logger.info(f"BERT code tokenizer ready, example: 'bool acoraIs_nice = True;' -> {str(tokenizer.tokenize('bool acoraIs_nice = True;'))}")
 
     logger.info(f"Loading the trained BERT model from {bert_trained_path}...")

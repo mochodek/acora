@@ -68,8 +68,8 @@ if __name__ == '__main__':
                         help="a code tokenizer to be used (either CodeTokenizer or SignatureCodeTokenizer).", 
                         type=str, default="CodeTokenizer")
 
-    parser.add_argument("--preserve_whitespace",
-                        help="whether or not to preserve whitespaces as tokens).", 
+    parser.add_argument("--omit_whitespace",
+                        help="whether or not to omit whitespaces as tokens).", 
                         action='store_true')
 
 
@@ -86,7 +86,7 @@ if __name__ == '__main__':
     line_pairs_per_file = args['line_pairs_per_file']
     line_repeat_period = args['line_repeat_period']
     tokenizer = args['tokenizer']
-    preserve_whitespace = args['preserve_whitespace']
+    omit_whitespace = args['omit_whitespace']
 
 
     if tokenizer not in ['CodeTokenizer', "SignatureCodeTokenizer"]:
@@ -125,9 +125,9 @@ if __name__ == '__main__':
 
     logger.info("Initializing a BERT code tokenizer...")
     if tokenizer == 'CodeTokenizer':
-        tokenizer = CodeTokenizer(vocab.token_dict, cased=True, preserve_whitespace=preserve_whitespace)
+        tokenizer = CodeTokenizer(vocab.token_dict, cased=True, preserve_whitespace=not omit_whitespace)
     else:
-        tokenizer = SignatureCodeTokenizer(vocab.token_dict, cased=True, preserve_whitespace=preserve_whitespace)
+        tokenizer = SignatureCodeTokenizer(vocab.token_dict, cased=True, preserve_whitespace=not omit_whitespace)
     logger.info(f"BERT code tokenizer ready, example: 'int acoraIs_nice = 1;' -> {str(tokenizer.tokenize('int acoraIs_nice = 1;'))}")
 
     logger.info("Generating code-line pairs...")

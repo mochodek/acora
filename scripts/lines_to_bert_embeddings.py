@@ -94,8 +94,8 @@ if __name__ == '__main__':
     parser.add_argument("--output_file_path", help="a path to a json file containing two lists: lines and their embeddings.",
                         type=str, default="./lines_embeddings.json")
     
-    parser.add_argument("--preserve_whitespace",
-                        help="whether or not to preserve whitespaces as tokens).", 
+    parser.add_argument("--omit_whitespace",
+                        help="whether or not to omit whitespaces as tokens).", 
                         action='store_true')
     
 
@@ -115,7 +115,7 @@ if __name__ == '__main__':
     not_use_gpu = args['not_use_gpu']
     output_file_path =  args['output_file_path']
     unique_lines =  args['unique_lines']
-    preserve_whitespace = args['preserve_whitespace']
+    omit_whitespace = args['omit_whitespace']
     
     ######
     
@@ -132,7 +132,7 @@ if __name__ == '__main__':
     logger.info(f"Loaded {vocab.size:,} vocab entries.")
 
     logger.info("Initializing a BERT code tokenizer...")
-    tokenizer = CodeTokenizer(vocab.token_dict, cased=True, preserve_whitespace=preserve_whitespace)
+    tokenizer = CodeTokenizer(vocab.token_dict, cased=True, preserve_whitespace=not omit_whitespace)
     logger.info(f"BERT code tokenizer ready, example: 'bool acoraIs_nice = True;' -> {str(tokenizer.tokenize('bool acoraIs_nice = True;'))}")
 
     logger.info("Loading training data...")
