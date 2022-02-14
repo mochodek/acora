@@ -151,7 +151,8 @@ if __name__ == '__main__':
     logger.info("Extracting lines embeddings...")
     embeddings_extractor = CodeLinesBERTEmbeddingsExtractor(base_model=model, 
                                                             no_layers=no_layers,
-                                                            token_dict=vocab.token_dict)
+                                                            token_dict=vocab.token_dict,
+                                                            preserve_whitespace=not omit_whitespace)
     lines_embeddings = embeddings_extractor.extract_embeddings(lines)
     logger.info(f"Extracted embeddings for {len(lines_embeddings)} lines, each of size {lines_embeddings[0].shape}.")
 
