@@ -31,19 +31,19 @@ with warnings.catch_warnings():
         from tensorflow import ConfigProto, Session, set_random_seed
         import keras
         from keras.models import load_model
+        from keras_radam import RAdam
     else:
         os.environ['TF_KERAS'] = '1'
         from tensorflow.compat.v1 import ConfigProto, Session, set_random_seed
         import tensorflow.compat.v1.keras as keras
         from tensorflow.compat.v1.keras.models import load_model
+        from acora.warmup_v2 import AdamWarmup as RAdam
          
     from tensorflow.python.client import device_lib
 
 
     from keras_bert import get_custom_objects
     from keras_bert.layers.extract import Extract
-
-    from keras_radam import RAdam
 
 from acora.vocab import BERTVocab
 from acora.code import CodeTokenizer, load_code_files, plot_commented_lines_confusion_matrix, \

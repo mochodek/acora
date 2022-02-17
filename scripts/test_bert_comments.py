@@ -26,17 +26,18 @@ with warnings.catch_warnings():
         os.environ['TF_KERAS'] = '0'
         from tensorflow import ConfigProto, Session, set_random_seed
         import keras
+        from keras_radam import RAdam
     else:
         os.environ['TF_KERAS'] = '1'
         from tensorflow.compat.v1 import ConfigProto, Session, set_random_seed
         import tensorflow.compat.v1.keras as keras
+        from acora.warmup_v2 import AdamWarmup as RAdam
          
     from tensorflow.python.client import device_lib
 
 
     from keras_bert import Tokenizer, get_custom_objects
 
-    from keras_radam import RAdam
 
 
 

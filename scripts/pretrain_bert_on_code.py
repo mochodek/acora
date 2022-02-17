@@ -33,6 +33,7 @@ with warnings.catch_warnings():
         import keras
         from keras import backend as K
         from keras.models import load_model
+        from keras_radam import RAdam
     else:
         os.environ['TF_KERAS'] = '1'
         from tensorflow.compat.v1 import ConfigProto, Session, set_random_seed
@@ -40,12 +41,13 @@ with warnings.catch_warnings():
         from tensorflow.compat.v1.keras import backend
         from tensorflow.compat.v1.keras import backend as K
         from tensorflow.compat.v1.keras.models import load_model
+        from acora.warmup_v2 import AdamWarmup as RAdam
     
     from keras_bert import get_model, compile_model, gen_batch_inputs, get_custom_objects
 
     from tensorflow.python.client import device_lib
 
-    from keras_radam import RAdam
+    
 
 
 from acora.vocab import BERTVocab

@@ -29,10 +29,12 @@ with warnings.catch_warnings():
         os.environ['TF_KERAS'] = '0'
         from tensorflow import ConfigProto, Session, set_random_seed
         import keras
+        from keras_radam import RAdam
     else:
         os.environ['TF_KERAS'] = '1'
         from tensorflow.compat.v1 import ConfigProto, Session, set_random_seed
         import tensorflow.compat.v1.keras as keras
+        from acora.warmup_v2 import AdamWarmup as RAdam
          
     from tensorflow.python.client import device_lib
 
@@ -40,7 +42,6 @@ with warnings.catch_warnings():
     from keras_bert import Tokenizer, load_trained_model_from_checkpoint
     from keras_bert.layers.extract import Extract
 
-    from keras_radam import RAdam
 
 
 from acora.vocab import BERTVocab
