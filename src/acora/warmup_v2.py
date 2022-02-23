@@ -39,8 +39,8 @@ class AdamWarmup(Optimizer):
     """Adam optimizer with warmup."""
 
     def __init__(self,
-                 decay_steps,
-                 warmup_steps,
+                 decay_steps=0,
+                 warmup_steps=0,
                  min_lr=0.0,
                  learning_rate=0.001,
                  beta_1=0.9,
