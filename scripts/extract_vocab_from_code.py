@@ -15,11 +15,7 @@ with warnings.catch_warnings():
     warnings.filterwarnings("ignore",category=FutureWarning)
 
     import tensorflow as tf
-
-    if tf.__version__.startswith("1."):
-        os.environ['TF_KERAS'] = '0'
-    else:
-        os.environ['TF_KERAS'] = '1'
+    import tensorflow.keras as keras
 
 
 from keras_bert import get_base_dict

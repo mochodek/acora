@@ -23,18 +23,10 @@ import warnings
 with warnings.catch_warnings():  
     warnings.filterwarnings("ignore",category=FutureWarning)
 
-    import tensorflow as tf
 
-    if tf.__version__.startswith("1."):
-        os.environ['TF_KERAS'] = '0'
-        from tensorflow import ConfigProto, Session, set_random_seed
-        import keras
-        from keras_radam import RAdam
-    else:
-        os.environ['TF_KERAS'] = '1'
-        from tensorflow.compat.v1 import ConfigProto, Session, set_random_seed
-        import tensorflow.compat.v1.keras as keras
-        from acora.warmup_v2 import AdamWarmup as RAdam
+    import tensorflow as tf
+    import tensorflow.keras as keras
+    from tensorflow.keras.optimizers.experimental import AdamW
          
     from tensorflow.python.client import device_lib
 
@@ -163,6 +155,10 @@ if __name__ == '__main__':
     
     ######
 
+    if weight_instances:
+        logger.error("Sorry the weight_instances option is currently not supported due to changes in Keras.")
+        exit(1)
+
     cols = [message_column, purpose_column] + subject_columns
 
     config_path = os.path.join(bert_pretrained_path, 'bert_config.json')
@@ -176,12 +172,9 @@ if __name__ == '__main__':
     if not not_use_gpu and len(gpus) == 0:
         logger.error("You don't have a GPU available on your system, it can affect the performance...")
 
-    config = ConfigProto( device_count = {'GPU': 0 if not_use_gpu else len(gpus)}, allow_soft_placement = True )
-    sess = Session(config=config) 
-    if tf.__version__.startswith("1."):
-        keras.backend.set_session(sess)
-    else:
-        tf.compat.v1.keras.backend.set_session(sess)
+
+    for gpu in tf.config.list_physical_devices('GPU'):
+        tf.config.experimental.set_memory_growth(gpu, True)
 
     logger.info(f"Loading vocabulary from {vocab_path}")
     vocab = BERTVocab.load_from_file(vocab_path)
@@ -225,7 +218,7 @@ if __name__ == '__main__':
     y_all_subject = subject_transformer.encode_one_hot_all_subjects()
 
     np.random.seed(random_seed)
-    set_random_seed(random_seed)
+    tf.random.set_seed(random_seed)
   
     logger.info("Loading the pre-trained BERT model...")
     layer_num = bert_config['num_hidden_layers']
@@ -254,7 +247,13 @@ if __name__ == '__main__':
     model = keras.models.Model(inputs, outputs)
 
     model.compile(
-        RAdam(learning_rate =lr),
+        optimizer=AdamW(
+                learning_rate=1e-4,
+                beta_1=0.9,
+                beta_2=0.999,
+                epsilon=1e-07,
+                weight_decay=0.01,
+            ),
         loss=losses, 
         loss_weights=loss_weights,
         metrics=['accuracy'],
@@ -266,6 +265,7 @@ if __name__ == '__main__':
 
     logger.info("Fine-tuning BERT model...")
     if weight_instances:
+
         purpose_class_weights = purpose_transformer.class_weights()
         logger.info(f"Calculated purpose weights: {purpose_class_weights}")
 

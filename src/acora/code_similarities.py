@@ -7,7 +7,7 @@ from sklearn.neighbors import NearestNeighbors
 class SimilarLinesFinder():
     """Allows finding similar lines to the lines given as the reference database."""
 
-    def __init__(self, cut_off_percentile=None, max_similar=None, cut_off_sample=500, at_least_one_result=True):
+    def __init__(self, cut_off_percentile=None, max_similar=None, cut_off_sample=500, at_least_one_result=True, metric=None):
         """
         Parameters:
         -----------
@@ -29,6 +29,7 @@ class SimilarLinesFinder():
         self.dist_cut_off = None
         self.cut_off_sample = cut_off_sample
         self.at_least_one_result = at_least_one_result
+        self.metric = metric
 
     def fit(self, reference_lines, reference_lines_embeddings):
         """Fits a simlarity finder model
@@ -43,9 +44,14 @@ class SimilarLinesFinder():
         self.reference_lines = reference_lines
         self.reference_lines_embeddings = reference_lines_embeddings
 
-        self.logger.debug(f"Fitting the NearestNeighbors model using the minkowski p=6 distance...")
-        self.nbrs = NearestNeighbors(n_neighbors=self.max_similar if self.max_similar is not None else len(self.reference_lines),
-                                    algorithm='ball_tree', metric='minkowski', p=6) 
+        if self.metric is None:
+            self.logger.debug(f"Fitting the NearestNeighbors model using the minkowski p=6 distance...")
+            self.nbrs = NearestNeighbors(n_neighbors=self.max_similar if self.max_similar is not None else len(self.reference_lines),
+                                        algorithm='ball_tree', metric='minkowski', p=6) 
+        else:
+            self.logger.debug(f"Fitting the NearestNeighbors model using the {self.metric} distance...")
+            self.nbrs = NearestNeighbors(n_neighbors=self.max_similar if self.max_similar is not None else len(self.reference_lines),
+                                        algorithm='ball_tree', metric=self.metric)
         self.nbrs.fit(self.reference_lines_embeddings)
 
         if self.cut_off_percentile is not None:

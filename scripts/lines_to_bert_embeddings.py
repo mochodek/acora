@@ -16,19 +16,8 @@ with warnings.catch_warnings():
     warnings.filterwarnings("ignore",category=FutureWarning)
 
     import tensorflow as tf
-
-    if tf.__version__.startswith("1."):
-        os.environ['TF_KERAS'] = '0'
-        from tensorflow import ConfigProto, Session, set_random_seed
-        import keras
-        from keras.models import load_model
-        from keras_radam import RAdam
-    else:
-        os.environ['TF_KERAS'] = '1'
-        from tensorflow.compat.v1 import ConfigProto, Session, set_random_seed
-        import tensorflow.compat.v1.keras as keras
-        from tensorflow.compat.v1.keras.models import load_model
-        from acora.warmup_v2 import AdamWarmup as RAdam
+    import tensorflow.keras as keras
+    from tensorflow.keras.optimizers.experimental import AdamW
          
     from tensorflow.python.client import device_lib
 
@@ -123,9 +112,8 @@ if __name__ == '__main__':
     if not not_use_gpu and len(gpus) == 0:
         logger.error("You don't have a GPU available on your system, it can affect the performance...")
      
-    config = ConfigProto( device_count = {'GPU': 0 if not_use_gpu else len(gpus)}, allow_soft_placement = True )
-    sess = Session(config=config) 
-    keras.backend.set_session(sess)
+    for gpu in tf.config.list_physical_devices('GPU'):
+        tf.config.experimental.set_memory_growth(gpu, True)
 
     logger.info(f"Loading vocabulary from {vocab_path}")
     vocab = BERTVocab.load_from_file(vocab_path, limit=vocab_size)
@@ -144,7 +132,7 @@ if __name__ == '__main__':
 
     logger.info(f"Loading a BERT model from {bert_path}...")
     custom_objects = get_custom_objects()
-    custom_objects['RAdam'] = RAdam
+    custom_objects['AdamW'] = AdamW
     model = keras.models.load_model(bert_path, 
                                     custom_objects=custom_objects)
 

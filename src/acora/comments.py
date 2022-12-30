@@ -122,8 +122,8 @@ class CommentPurposeTransformer(object):
 
     def class_weights(self):
         """Calculates and returns class weights based on their frequency in the training dataset."""
-        return class_weight.compute_class_weight('balanced', np.unique(self.message_purpose_labels.cat.codes), 
-                self.message_purpose_labels.cat.codes)
+        return class_weight.compute_class_weight('balanced', classes=np.unique(self.message_purpose_labels.cat.codes), 
+                y=self.message_purpose_labels.cat.codes)
 
 
 class CommentSubjectTransformer(object):
@@ -169,8 +169,8 @@ class CommentSubjectTransformer(object):
         subject_bin_per_type_weights = {}
 
         for i, subject_class in enumerate(self.subject_columns):
-            subject_bin_weights[subject_class] = class_weight.compute_class_weight('balanced', self.message_subject_types[subject_class].unique(), 
-                                                                                self.message_subject_types[subject_class])
+            subject_bin_weights[subject_class] = class_weight.compute_class_weight('balanced', classes=self.message_subject_types[subject_class].unique(), 
+                                                                                y=self.message_subject_types[subject_class])
             subject_bin_per_type_weights[subject_class] = subject_bin_weights[subject_class] * subject_class_weights[i]
 
         return subject_bin_weights

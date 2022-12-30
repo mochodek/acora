@@ -311,3 +311,10 @@ def report_commented_lines_predictions_accuracy(y_pred, y):
     logger.info(f"Recall = {commented_lines_recall:.2}")
     logger.info(f"F1-score = {commented_lines_f1:.2}")
     logger.info(f"MCC = {commented_lines_mcc:.2}")
+
+    return {"Accuracy": commented_lines_acc,
+        "Precision": commented_lines_precision,
+        "Recall": commented_lines_recall,
+        "F1-score": commented_lines_f1,
+        "MCC": commented_lines_mcc
+        }

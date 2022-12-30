@@ -2,8 +2,7 @@ python ../../scripts/train_bert_comments.py  --training_data_paths ^
      "data\wireshark_comments_train.xlsx" ^
      --bert_pretrained_path  "..\uncased_L-8_H-512_A-8" ^
      --report_comments_lengths ^
-     --weight_instances ^
-     --epochs  70 ^
+     --epochs  10 ^
      --batch_size 64 ^
      --report_training_accuracy ^
      --purpose_cm_train_path  "comment_purpose_train_w.pdf"  ^

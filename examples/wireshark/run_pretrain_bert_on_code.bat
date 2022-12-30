@@ -6,6 +6,4 @@ python ../../scripts/pretrain_bert_on_code.py  ^
      --seq_len 128 ^
      --batch_size 32 ^
      --epochs 10 ^
-     --model_save_path "bert_pretrained_on_code.h5" ^
-     --use_adapter ^
-     --optimizer "Lamb"
+     --model_save_path "bert_pretrained_on_code.h5"

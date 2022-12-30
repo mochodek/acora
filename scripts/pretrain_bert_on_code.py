@@ -26,28 +26,12 @@ with warnings.catch_warnings():
     warnings.filterwarnings("ignore",category=FutureWarning)
 
     import tensorflow as tf
-
-    if tf.__version__.startswith("1."):
-        os.environ['TF_KERAS'] = '0'
-        from tensorflow import ConfigProto, Session, set_random_seed
-        import keras
-        from keras import backend as K
-        from keras.models import load_model
-        from keras_radam import RAdam
-    else:
-        os.environ['TF_KERAS'] = '1'
-        from tensorflow.compat.v1 import ConfigProto, Session, set_random_seed
-        import tensorflow.compat.v1.keras as keras
-        from tensorflow.compat.v1.keras import backend
-        from tensorflow.compat.v1.keras import backend as K
-        from tensorflow.compat.v1.keras.models import load_model
-        from acora.warmup_v2 import AdamWarmup as RAdam
+    import tensorflow.keras as keras
+    from tensorflow.keras.optimizers.experimental import AdamW
     
-    from keras_bert import get_model, compile_model, gen_batch_inputs, get_custom_objects
+    from keras_bert import get_model, gen_batch_inputs, get_custom_objects
 
     from tensorflow.python.client import device_lib
-
-    
 
 
 from acora.vocab import BERTVocab
@@ -92,8 +76,8 @@ if __name__ == '__main__':
                         type=str, default=None)
 
     parser.add_argument("--optimizer",
-                        help="an optimizer that will be used to train the model (RAdam).", 
-                        type=str, default="RAdam")
+                        help="an optimizer that will be used to train the model (AdamW).", 
+                        type=str, default="AdamW")
 
     parser.add_argument("--not_use_gpu", help="to forbid using a GPU if available.",
                         action='store_true')
@@ -128,19 +112,20 @@ if __name__ == '__main__':
     model_save_path = args['model_save_path']
     model_path = args['model_path']
     optimizer = args['optimizer']
-    if optimizer not in ["RAdam"]:
+    if optimizer not in ["AdamW"]:
         logger.error(f"{optimizer} is not a supported optimizer.")
         exit(1)
     
     ######
 
     gpus = [x.name for x in device_lib.list_local_devices() if x.device_type == 'GPU']
+    logger.info(f"GPU devices available: {','.join(gpus)}")
     if not not_use_gpu and len(gpus) == 0:
         logger.error("You don't have a GPU available on your system, it can affect the performance...")
-     
-    config = ConfigProto( device_count = {'GPU': 0 if not_use_gpu else len(gpus)}, allow_soft_placement = True )
-    sess = Session(config=config) 
-    keras.backend.set_session(sess)
+
+    for gpu in tf.config.list_physical_devices('GPU'):
+        tf.config.experimental.set_memory_growth(gpu, True)
+
     
 
     logger.info(f"Loading vocabulary from {vocab_path}")
@@ -154,7 +139,7 @@ if __name__ == '__main__':
             bert_config = json.load(f)
 
         np.random.seed(random_seed)
-        set_random_seed(random_seed)
+        tf.random.set_seed(random_seed)
 
         logger.info(f"Creating a model...")
         model = get_model(token_num=vocab.size, #vocab_size
@@ -172,15 +157,23 @@ if __name__ == '__main__':
         )
         #model.name="BERT4Code"
 
-        if optimizer == "RAdam":
-            compile_model(model)
+        model.compile(
+            optimizer=AdamW(
+                learning_rate=1e-4,
+                beta_1=0.9,
+                beta_2=0.999,
+                epsilon=1e-07,
+                weight_decay=0.01,
+            ),
+            loss=keras.losses.sparse_categorical_crossentropy,
+        )
 
         
 
     else:
         logger.info(f"Loading a model to continue training it...")
         custom_objects = get_custom_objects()
-        custom_objects['RAdam'] = RAdam
+        custom_objects['AdamW'] = AdamW
         model = keras.models.load_model(model_path, custom_objects=custom_objects)
     
     model.summary(print_fn=logger.info)
