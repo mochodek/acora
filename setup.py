@@ -32,7 +32,7 @@ setup(name='acora',
           'pygit2>=1.11.1',
           'xlrd == 1.2.0',
           'openpyxl>=3.0.10',
-          'flask==1.1.2',
+          'flask==2.3.2',
       ],
       scripts=[
           'scripts/download_commented_lines_from_gerrit.py',
